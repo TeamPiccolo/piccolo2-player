@@ -178,10 +178,16 @@
    <property name="text">
     <string>&amp;Connect</string>
    </property>
+   <property name="statusTip">
+    <string>connect to remote piccolo server</string>
+   </property>
   </action>
   <action name="action_Quit">
    <property name="text">
     <string>&amp;Quit</string>
+   </property>
+   <property name="statusTip">
+    <string>exit application</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
