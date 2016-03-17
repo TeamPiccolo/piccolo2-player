@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>ConnectDialog</class>
  <widget class="QDialog" name="ConnectDialog">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -15,7 +18,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QRadioButton" name="radioButton">
+    <widget class="QRadioButton" name="connectHTTP">
      <property name="text">
       <string>connect via http</string>
      </property>
@@ -34,7 +37,13 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit">
+      <widget class="QLineEdit" name="serverURL">
+       <property name="toolTip">
+        <string>enter the server URL</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
        <property name="text">
         <string>http://localhost:8080</string>
        </property>
@@ -50,7 +59,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="radioButton_2">
+    <widget class="QRadioButton" name="connectXBee">
      <property name="text">
       <string>connect via XBee Radio</string>
      </property>
@@ -66,7 +75,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_2"/>
+      <widget class="QLineEdit" name="xbeeSerial">
+       <property name="toolTip">
+        <string>enter XBee serial number</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
