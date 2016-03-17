@@ -6,6 +6,49 @@ from PyQt4 import QtGui, QtCore
 import player
 import connect
 
+class IntegrationTimes(QtGui.QStandardItemModel):
+    def __init__(self,*args,**keywords):
+
+        QtGui.QStandardItemModel.__init__(self,*args,**keywords)
+
+        self._shutters = None
+        self._spectrometers = None
+        self._piccolo = None
+
+        self.itemChanged.connect(self.updateIntegrationTime)
+
+
+    def updateIntegrationTime(self,index):
+        try:
+            data = float(index.text())
+        except:
+            index.setForeground(QtGui.QBrush(QtGui.QColor('red')))
+            return
+        index.setForeground(QtGui.QBrush(QtGui.QColor('black')))
+        self._piccolo.setIntegrationTime(shutter=self._shutters[index.column()],
+                                         spectrometer=self._spectrometers[index.row()],
+                                         milliseconds=data)
+
+    def piccoloConnect(self,piccolo):
+        self._piccolo = piccolo
+        self._shutters = self._piccolo.getShutterList()
+        self._spectrometers = self._piccolo.getSpectrometerList()
+        
+        self.setRowCount(len(self._spectrometers))
+        self.setColumnCount(len(self._shutters))
+
+        for i in range(len(self._shutters)):
+            self.setHorizontalHeaderItem(i,QtGui.QStandardItem(self._shutters[i]))
+        for j in range(len(self._spectrometers)):
+            self.setVerticalHeaderItem(j,QtGui.QStandardItem(self._spectrometers[j]))
+
+        for j in range(len(self._spectrometers)):
+            for i in range(len(self._shutters)):
+                data = self._piccolo.getIntegrationTime(shutter=self._shutters[i],
+                                                        spectrometer=self._spectrometers[j])
+                self.setItem(j,i,QtGui.QStandardItem(str(data)))
+
+
 
 class ConnectDialog(QtGui.QDialog,connect.Ui_ConnectDialog):
     def __init__(self,parent=None):
@@ -60,6 +103,10 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self._connectionType = 'http'
         self._connectionData = 'http://localhost:8080'
 
+        # the integration times
+        self._times = IntegrationTimes()
+        self.integrationTimeView.setModel(self._times)
+
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
@@ -74,6 +121,10 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         if self._piccolo != None:
             status = 'connected'
             state = 'green'
+            ps = self._piccolo.piccolo.status()
+            if ps != 'idle':
+                status = ps
+                state = 'orange'
 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
@@ -97,6 +148,11 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
             errorMsg = 'connection type {} is not implemented yet'.format(connection)
         if not ok:
             error=QtGui.QMessageBox.critical(self,errorTitle,errorMsg,QtGui.QMessageBox.Ok)
+            return
+        
+        # hook up integration times
+        self._times.piccoloConnect(self._piccolo.piccolo)
+
             
     def connectDialog(self):
         dialog = ConnectDialog()
