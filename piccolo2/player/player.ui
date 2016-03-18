@@ -52,7 +52,17 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit"/>
+           <widget class="QLineEdit" name="outputDir">
+            <property name="toolTip">
+             <string>output directory</string>
+            </property>
+            <property name="statusTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>spectra</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -68,7 +78,17 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="spinBox"/>
+             <widget class="QSpinBox" name="repeatMeasurements">
+              <property name="toolTip">
+               <string>number of measurements - 0 for indefinite repeats</string>
+              </property>
+              <property name="statusTip">
+               <string/>
+              </property>
+              <property name="value">
+               <number>1</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -95,7 +115,14 @@
              </widget>
             </item>
             <item>
-             <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+             <widget class="QDoubleSpinBox" name="delayMeasurements">
+              <property name="toolTip">
+               <string>delay in seconds between measurements</string>
+              </property>
+              <property name="statusTip">
+               <string/>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -117,24 +144,42 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="startRecordingButton">
+            <property name="toolTip">
+             <string>start data acquisition</string>
+            </property>
+            <property name="statusTip">
+             <string/>
+            </property>
             <property name="text">
              <string>Start</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="pauseRecordingButton">
+            <property name="toolTip">
+             <string>pause data acquisition</string>
+            </property>
+            <property name="statusTip">
+             <string/>
+            </property>
             <property name="text">
              <string>Pause</string>
             </property>
             <property name="checkable">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="stopRecordingButton">
+            <property name="toolTip">
+             <string>stop data acquisition</string>
+            </property>
+            <property name="statusTip">
+             <string/>
+            </property>
             <property name="text">
              <string>Stop</string>
             </property>

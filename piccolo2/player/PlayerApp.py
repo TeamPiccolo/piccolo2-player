@@ -107,6 +107,11 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self._times = IntegrationTimes()
         self.integrationTimeView.setModel(self._times)
 
+        # connect recording buttons
+        self.startRecordingButton.clicked.connect(self.startRecording)
+        self.stopRecordingButton.clicked.connect(self.stopRecording)
+        self.pauseRecordingButton.clicked.connect(self.pauseRecording)
+
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
@@ -121,15 +126,33 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         if self._piccolo != None:
             status = 'connected'
             state = 'green'
-            ps = self._piccolo.piccolo.status()
-            if ps != 'idle':
-                status = ps
+            (busy,paused) = self._piccolo.piccolo.status()
+            if busy:
+                status = 'busy'
                 state = 'orange'
+            if paused:
+                status += ', paused'
+                self.pauseRecordingButton.setText("Unpause")
+            else:
+                self.pauseRecordingButton.setText("Pause")
 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
         self.repaint()
-        
+
+    def startRecording(self):
+        n = self.repeatMeasurements.value()
+        if n==0:
+            n='Inf'
+        self._piccolo.piccolo.record(delay=self.delayMeasurements.value(),
+                                     nCycles=n,
+                                     outDir=str(self.outputDir.text()))
+
+    def pauseRecording(self):
+        self._piccolo.piccolo.pause()
+
+    def stopRecording(self):
+        self._piccolo.piccolo.abort()
 
     def connect(self,connection,data):
         ok = True
