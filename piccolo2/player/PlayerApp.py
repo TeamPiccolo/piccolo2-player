@@ -115,8 +115,14 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         # connect spectra load boxes
         self._spectraList = None
         self._updateSpectraFile = True
-        self.selectFile.currentIndexChanged.connect(self.downloadSpectra)
+        self._spectra = None
+        self._selectedDirection = None
+        self.selectSpectrum.addItems(['Light','Dark'])
+        self._selectedSpectrum = self.selectSpectrum.currentText()    
         self.refreshSpectraListButton.clicked.connect(self.getSpectraList)
+        self.selectFile.currentIndexChanged.connect(self.downloadSpectra)
+        self.selectShutter.currentIndexChanged.connect(self.setDirection)
+        self.selectSpectrum.currentIndexChanged.connect(self.setSpectrum)
 
         # periodically check status
         self.statusLabel = QtGui.QLabel()
@@ -181,7 +187,23 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
     def downloadSpectra(self,idx):
         if self._spectraList!=None and self._updateSpectraFile:
              data = self._piccolo.piccolo.getSpectra(fname=self._spectraList[idx])
-             print data
+             self._spectra = piccolo_client.PiccoloSpectraList(data=data)
+             # set directions
+             self.selectShutter.clear()
+             self.selectShutter.addItems(self._spectra.directions)
+
+    def setDirection(self,idx):
+        self._selectedDirection = self.selectShutter.currentText()
+        self.showSpectra()
+
+    def setSpectrum(self,idx):
+        self._selectedSpectrum = self.selectSpectrum.currentText()
+        self.showSpectra()
+
+    def showSpectra(self):
+        print self._selectedDirection, self._selectedSpectrum
+        spectra = self._spectra.getSpectra(self._selectedDirection, self._selectedSpectrum)
+        print spectra
 
     def connect(self,connection,data):
         ok = True
