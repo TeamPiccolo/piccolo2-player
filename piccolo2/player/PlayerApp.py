@@ -112,6 +112,12 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self.stopRecordingButton.clicked.connect(self.stopRecording)
         self.pauseRecordingButton.clicked.connect(self.pauseRecording)
 
+        # connect spectra load boxes
+        self._spectraList = None
+        self._updateSpectraFile = True
+        self.selectFile.currentIndexChanged.connect(self.downloadSpectra)
+        self.refreshSpectraListButton.clicked.connect(self.getSpectraList)
+
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
@@ -153,6 +159,29 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
 
     def stopRecording(self):
         self._piccolo.piccolo.abort()
+
+    def getSpectraList(self):
+        if self._piccolo!=None:
+            self._spectraList = self._piccolo.piccolo.getSpectraList()
+
+            # check if we have some items in the list already
+            # if so clear existing list but ignore change
+            if self.selectFile.count() > 0:
+                self._updateSpectraFile = False
+                curSelection = self.selectFile.currentText()
+                self.selectFile.clear()
+
+            self.selectFile.addItems(self._spectraList)
+
+            if not self._updateSpectraFile:
+                idx = self.selectFile.findText(curSelection)
+                self.selectFile.setCurrentIndex(idx)
+                self._updateSpectraFile = True
+
+    def downloadSpectra(self,idx):
+        if self._spectraList!=None and self._updateSpectraFile:
+             data = self._piccolo.piccolo.getSpectra(fname=self._spectraList[idx])
+             print data
 
     def connect(self,connection,data):
         ok = True
