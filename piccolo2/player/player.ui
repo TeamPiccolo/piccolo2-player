@@ -314,6 +314,7 @@
     <property name="title">
      <string>&amp;Schedule</string>
     </property>
+    <addaction name="action_Add_Schedule"/>
     <addaction name="actionList_Schedules"/>
    </widget>
    <addaction name="menu_File"/>
@@ -345,6 +346,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="action_Add_Schedule">
+   <property name="text">
+    <string>&amp;Add Schedule</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
    </property>
   </action>
  </widget>

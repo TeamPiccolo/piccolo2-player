@@ -96,7 +96,6 @@ class ScheduleListDialog(QtGui.QDialog,schedulelist.Ui_ScheduleListWindow):
 
         self.tableView.resizeColumnsToContents()
         
-
 if __name__ == '__main__':
     import argparse
     from piccolo_client import PiccoloJSONRPCClient

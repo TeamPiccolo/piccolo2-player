@@ -55,13 +55,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="addButton">
-       <property name="text">
-        <string>New Schedule</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="closeButton">
        <property name="text">
         <string>Close</string>

@@ -6,7 +6,7 @@ from PyQt4 import QtGui, QtCore
 import player
 import connect
 from ScheduleList import *
-
+from Schedule import ScheduleDialog
 
 class IntegrationTimes(QtGui.QStandardItemModel):
     def __init__(self,*args,**keywords):
@@ -129,6 +129,7 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         # hook up menu
         self.action_Connect.triggered.connect(self.connectDialog)
         self.action_Quit.triggered.connect(QtGui.qApp.quit)
+        self.action_Add_Schedule.triggered.connect(self.addSchedule)
         self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
 
         # periodically check status
@@ -159,13 +160,22 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
         self.repaint()
 
-    def startRecording(self):
+    def startRecording(self,start=None,end=None,interval=None):
         n = self.repeatMeasurements.value()
         if n==0:
             n='Inf'
-        self._piccolo.piccolo.record(delay=self.delayMeasurements.value(),
-                                     nCycles=n,
-                                     outDir=str(self.outputDir.text()))
+        kwds ={}
+        kwds['delay'] = self.delayMeasurements.value()
+        kwds['nCycles'] = n
+        kwds['outDir'] = str(self.outputDir.text())
+        if start!=None:
+            kwds['at_time'] = start
+        if interval!=None:
+            kwds['interval'] = interval
+        if end!=None:
+            kwds['end_time'] = end
+
+        self._piccolo.piccolo.record(**kwds)
 
     def pauseRecording(self):
         self._piccolo.piccolo.pause()
@@ -247,6 +257,12 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         
     def scheduledJobsDialog(self):
         self._scheduledJobsDialog.show()
+
+    def addSchedule(self):
+        start,interval,end = ScheduleDialog.getSchedule()
+        print start,interval,end
+        if start!=None:
+            self.startRecording(start=start,end=end,interval=interval)
 
 def main(connection):
     app = QtGui.QApplication([])
