@@ -5,6 +5,8 @@ import piccolo_client
 from PyQt4 import QtGui, QtCore
 import player
 import connect
+from ScheduleList import *
+
 
 class IntegrationTimes(QtGui.QStandardItemModel):
     def __init__(self,*args,**keywords):
@@ -94,10 +96,6 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         super(PlayerApp, self).__init__(parent)
         self.setupUi(self)
 
-        # hook up menu
-        self.action_Connect.triggered.connect(self.connectDialog)
-        self.action_Quit.triggered.connect(QtGui.qApp.quit)
-
         # the piccolo connection
         self._piccolo = None
         self._connectionType = 'http'
@@ -123,6 +121,15 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self.selectFile.currentIndexChanged.connect(self.downloadSpectra)
         self.selectShutter.currentIndexChanged.connect(self.setDirection)
         self.selectSpectrum.currentIndexChanged.connect(self.setSpectrum)
+
+        # hook up scheduler
+        self._scheduledJobs = PiccoloSchedule()
+        self._scheduledJobsDialog = ScheduleListDialog(scheduledJobs = self._scheduledJobs)
+
+        # hook up menu
+        self.action_Connect.triggered.connect(self.connectDialog)
+        self.action_Quit.triggered.connect(QtGui.qApp.quit)
+        self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
 
         # periodically check status
         self.statusLabel = QtGui.QLabel()
@@ -227,6 +234,9 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         # hook up integration times
         self._times.piccoloConnect(self._piccolo.piccolo)
 
+        # hook up scheduler
+        self._scheduledJobs.piccoloConnect(self._piccolo)
+
             
     def connectDialog(self):
         dialog = ConnectDialog()
@@ -235,6 +245,8 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         if data !=None:
             self.connect(data[0],data[1])
         
+    def scheduledJobsDialog(self):
+        self._scheduledJobsDialog.show()
 
 def main(connection):
     app = QtGui.QApplication([])
