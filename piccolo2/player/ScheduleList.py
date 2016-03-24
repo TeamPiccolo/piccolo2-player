@@ -2,6 +2,7 @@ __all__ = ['PiccoloSchedule','ScheduleListDialog']
 
 from PyQt4 import QtGui, QtCore
 import schedulelist
+import datetime
 
 class PiccoloSchedule(QtGui.QStandardItemModel):
     def __init__(self,*args,**keywords):
@@ -75,6 +76,24 @@ class ScheduleListDialog(QtGui.QDialog,schedulelist.Ui_ScheduleListWindow):
 
     def update(self):
         self._scheduledJobs.update()
+
+        TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
+        now = datetime.datetime.now()
+        for i in range(self._scheduledJobs.rowCount()):
+            if self.tableView.isRowHidden(i):
+                continue
+            hide = False
+            if len(self._scheduledJobs.item(i,4).text())>0:
+                if now > datetime.datetime.strptime(str(self._scheduledJobs.item(i,4).text()),TIMEFORMAT):
+                    hide = True
+            else:
+                if len(self._scheduledJobs.item(i,2).text())>0:
+                    interval = float(self._scheduledJobs.item(i,3).text())
+                    if interval<1.e-6 and now > datetime.datetime.strptime(str(self._scheduledJobs.item(i,2).text()),TIMEFORMAT):
+                        hide = True
+            if hide:
+                self.tableView.hideRow(i)
+
         self.tableView.resizeColumnsToContents()
         
 
