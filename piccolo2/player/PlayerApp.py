@@ -128,6 +128,7 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
 
         # hook up menu
         self.action_Connect.triggered.connect(self.connectDialog)
+        self.actionSave_Plot.triggered.connect(self.savePlot)
         self.action_Quit.triggered.connect(QtGui.qApp.quit)
         self.action_Add_Schedule.triggered.connect(self.addSchedule)
         self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
@@ -246,7 +247,6 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         # hook up scheduler
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
-
     def connectDialog(self):
         dialog = ConnectDialog()
         dialog.setConnection(self._connectionType,self._connectionData)
@@ -262,6 +262,12 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         print start,interval,end
         if start!=None:
             self.startRecording(start=start,end=end,interval=interval)
+
+    def savePlot(self):
+        fname = QtGui.QFileDialog.getSaveFileName(self,'Save Spectra Plot',
+                                                  "spectra.png",
+                                                  "Images (*.png *.jpg *.pdf)")
+        self.spectraPlot.save(str(fname))
 
 def main(connection):
     app = QtGui.QApplication([])

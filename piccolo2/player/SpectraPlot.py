@@ -25,9 +25,18 @@ class SpectraPlot(FigureCanvas):
         self.theplot.set_title(title)
 
     def plotSpectra(self,spectra):
+        date=None
         for s in spectra:
-            self.theplot.plot(s.waveLengths,s.pixels)
+            self.theplot.plot(s.waveLengths,s.pixels,label=s['SerialNumber'])
+            date=s['Datetime']
+        if len(spectra)>0:
+            t = self.theplot.get_title()
+            self.theplot.set_title('{}\n{}'.format(t,date))
+            self.theplot.legend()
         self.draw()
+
+    def save(self,fname):
+        self.figure.savefig(fname)
 
 if __name__ == ['__main__']:
     pass
