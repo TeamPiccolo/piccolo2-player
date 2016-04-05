@@ -35,7 +35,7 @@ class IntegrationTimes(QtGui.QStandardItemModel):
         self._piccolo = piccolo
         self._shutters = self._piccolo.getShutterList()
         self._spectrometers = self._piccolo.getSpectrometerList()
-        
+
         self.setRowCount(len(self._spectrometers))
         self.setColumnCount(len(self._shutters))
 
@@ -116,7 +116,7 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self._spectra = None
         self._selectedDirection = None
         self.selectSpectrum.addItems(['Light','Dark'])
-        self._selectedSpectrum = self.selectSpectrum.currentText()    
+        self._selectedSpectrum = self.selectSpectrum.currentText()
         self.refreshSpectraListButton.clicked.connect(self.getSpectraList)
         self.selectFile.currentIndexChanged.connect(self.downloadSpectra)
         self.selectShutter.currentIndexChanged.connect(self.setDirection)
@@ -239,21 +239,21 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         if not ok:
             error=QtGui.QMessageBox.critical(self,errorTitle,errorMsg,QtGui.QMessageBox.Ok)
             return
-        
+
         # hook up integration times
         self._times.piccoloConnect(self._piccolo.piccolo)
 
         # hook up scheduler
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
-            
+
     def connectDialog(self):
         dialog = ConnectDialog()
         dialog.setConnection(self._connectionType,self._connectionData)
         data = dialog.getData()
         if data !=None:
             self.connect(data[0],data[1])
-        
+
     def scheduledJobsDialog(self):
         self._scheduledJobsDialog.show()
 
