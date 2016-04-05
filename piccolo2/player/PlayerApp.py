@@ -217,9 +217,9 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         self.showSpectra()
 
     def showSpectra(self):
-        print self._selectedDirection, self._selectedSpectrum
+        self.spectraPlot.setTitle("{dir} {spec}".format(dir=self._selectedDirection,spec=self._selectedSpectrum))
         spectra = self._spectra.getSpectra(self._selectedDirection, self._selectedSpectrum)
-        print spectra
+        self.spectraPlot.plotSpectra(spectra)
 
     def connect(self,connection,data):
         ok = True
