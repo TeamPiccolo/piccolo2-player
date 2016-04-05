@@ -168,13 +168,12 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
         kwds['delay'] = self.delayMeasurements.value()
         kwds['nCycles'] = n
         kwds['outDir'] = str(self.outputDir.text())
-        if start!=None:
+        if start not in [None, False]:
             kwds['at_time'] = start
         if interval!=None:
             kwds['interval'] = interval
         if end!=None:
             kwds['end_time'] = end
-
         self._piccolo.piccolo.record(**kwds)
 
     def pauseRecording(self):
