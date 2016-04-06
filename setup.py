@@ -16,4 +16,10 @@ setup(
         ],
     },
     cmdclass=cmdclass,
+
+    # metadata for upload to PyPI
+    author = "Magnus Hagdorn, Alasdair MacArthur, Iain Robinson",
+    description = "Part of the piccolo2 system. This package provides GUI client",
+    license = "GPL",
+    url = "https://bitbucket.org/uoepiccolo/piccolo2-player",
 )
