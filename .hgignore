@@ -1,0 +1,12 @@
+# use glob syntax.
+syntax: glob
+
+*.pyc
+*.pico
+*~
+
+docs/_build
+build
+dist
+piccolo2_player.egg-info
+piccolo2/player/*_ui.py

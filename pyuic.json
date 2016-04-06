@@ -1,0 +1,13 @@
+{
+    "files": [
+	[
+	    "piccolo2/player/*.ui",
+	    "piccolo2/player"
+	]
+    ], 
+    "hooks": [], 
+    "pyrcc": "pyrcc4", 
+    "pyrcc_options": "-py2", 
+    "pyuic": "pyuic4", 
+    "pyuic_options": "--from-import"
+}

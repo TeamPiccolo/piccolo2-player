@@ -1,10 +1,10 @@
 __all__ = ['main']
 
-import piccolo_client
+import piccolo2.client
 
 from PyQt4 import QtGui, QtCore
-import player
-import connect
+import player_ui
+import connect_ui
 from ScheduleList import *
 from Schedule import ScheduleDialog
 
@@ -52,7 +52,7 @@ class IntegrationTimes(QtGui.QStandardItemModel):
 
 
 
-class ConnectDialog(QtGui.QDialog,connect.Ui_ConnectDialog):
+class ConnectDialog(QtGui.QDialog,connect_ui.Ui_ConnectDialog):
     def __init__(self,parent=None):
         super(ConnectDialog, self).__init__(parent)
         self.setupUi(self)
@@ -91,7 +91,7 @@ class ConnectDialog(QtGui.QDialog,connect.Ui_ConnectDialog):
             data = self.xbeeSerial.text()
         return method,str(data)
 
-class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
+class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def __init__(self, parent=None):
         super(PlayerApp, self).__init__(parent)
         self.setupUi(self)
@@ -204,7 +204,7 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
     def downloadSpectra(self,idx):
         if self._spectraList!=None and self._updateSpectraFile:
              data = self._piccolo.piccolo.getSpectra(fname=self._spectraList[idx])
-             self._spectra = piccolo_client.PiccoloSpectraList(data=data)
+             self._spectra = piccolo2.client.PiccoloSpectraList(data=data)
              # set directions
              self.selectShutter.clear()
              self.selectShutter.addItems(self._spectra.directions)
@@ -228,7 +228,7 @@ class PlayerApp(QtGui.QMainWindow, player.Ui_MainWindow):
             self._connectionType = 'http'
             self._connectionData = data
             try:
-                self._piccolo = piccolo_client.PiccoloJSONRPCClient(data)
+                self._piccolo = piccolo2.client.PiccoloJSONRPCClient(data)
             except:
                 ok = False
                 errorTitle = 'failed to connect'

@@ -1,0 +1,9 @@
+2016-04-06 Magnus Hagdorn
+ * started ChangeLog
+ * use setuptools
+ * add requirements.txt
+ * rename piccolo-player.pyw to piccolo2/pplayer.py
+ * delete piccolo2/player/Makefile, get setup tools to build python files
+ * piccolo2/player/PlayerApp.py: rename module files
+ * piccolo2/player/Schedule.py: ditto
+ * piccolo2/player/ScheduleList.py: ditto

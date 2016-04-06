@@ -1,10 +1,10 @@
 __all__ = ['ScheduleDialog']
 
 from PyQt4 import QtGui, QtCore
-import schedule
+import schedule_ui
 import datetime
 
-class ScheduleDialog(QtGui.QDialog,schedule.Ui_ScheduleDialog):
+class ScheduleDialog(QtGui.QDialog,schedule_ui.Ui_ScheduleDialog):
     def __init__(self,parent=None):
         super(ScheduleDialog, self).__init__(parent)
         self.setupUi(self)

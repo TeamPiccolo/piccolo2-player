@@ -1,7 +1,7 @@
 __all__ = ['PiccoloSchedule','ScheduleListDialog']
 
 from PyQt4 import QtGui, QtCore
-import schedulelist
+import schedulelist_ui
 import datetime
 
 class PiccoloSchedule(QtGui.QStandardItemModel):
@@ -60,7 +60,7 @@ class PiccoloSchedule(QtGui.QStandardItemModel):
         else:
             self._piccolo.scheduler.unsuspend(jid=jid)
 
-class ScheduleListDialog(QtGui.QDialog,schedulelist.Ui_ScheduleListWindow):
+class ScheduleListDialog(QtGui.QDialog,schedulelist_ui.Ui_ScheduleListWindow):
     def __init__(self,parent=None,scheduledJobs=None):
         super(ScheduleListDialog,self).__init__(parent)
         self.setupUi(self)
