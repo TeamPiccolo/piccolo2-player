@@ -233,6 +233,15 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 ok = False
                 errorTitle = 'failed to connect'
                 errorMsg = 'failed to connect to {}'.format(data)
+        elif connection == 'xbee':
+            self._connectionType = 'xbee'
+            self._connectionData = data
+            try:
+                self._piccolo = piccolo2.client.PiccoloXbeeClient(data)
+            except:
+                ok = False
+                errorTitle = 'failed to connect'
+                errorMsg = 'failed to connect to {}'.format(data)  
         else:
             ok = False
             errorTitle ='not implemented'

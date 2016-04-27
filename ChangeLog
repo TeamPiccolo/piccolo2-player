@@ -1,3 +1,6 @@
+2016-04-27 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: hookup xbee client
+
 2016-04-06 Magnus Hagdorn
  * README.md: updated
  * setup.py: add metadata
