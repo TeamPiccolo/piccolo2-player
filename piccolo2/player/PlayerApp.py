@@ -147,15 +147,20 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         if self._piccolo != None:
             status = 'connected'
             state = 'green'
-            (busy,paused) = self._piccolo.piccolo.status()
-            if busy:
-                status = 'busy'
-                state = 'orange'
-            if paused:
-                status += ', paused'
-                self.pauseRecordingButton.setText("Unpause")
+            pstatus = self._piccolo.piccolo.status()
+            if isinstance(pstatus,list):
+                (busy,paused) = pstatus
+                if busy:
+                    status = 'busy'
+                    state = 'orange'
+                if paused:
+                    status += ', paused'
+                    self.pauseRecordingButton.setText("Unpause")
+                else:
+                    self.pauseRecordingButton.setText("Pause")
             else:
-                self.pauseRecordingButton.setText("Pause")
+                status = pstatus
+                state = 'yellow'
 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
