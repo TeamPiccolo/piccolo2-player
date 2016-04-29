@@ -7,6 +7,9 @@ import player_ui
 import connect_ui
 from ScheduleList import *
 from Schedule import ScheduleDialog
+import datetime
+
+TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
 
 class IntegrationTimes(QtGui.QStandardItemModel):
     def __init__(self,*args,**keywords):
@@ -101,6 +104,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self._connectionType = 'http'
         self._connectionData = 'http://localhost:8080'
 
+        # status buttons
+        self.syncTimeButton.clicked.connect(self.syncTime)
+
         # the integration times
         self._times = IntegrationTimes()
         self.integrationTimeView.setModel(self._times)
@@ -139,9 +145,21 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.status)
         # check every second
-        self.timer.start(1000)
+        self.timer.start(1000)        
+
+    def syncTime(self):
+        now = datetime.datetime.now()
+        self._piccolo.piccolo.setClock(clock=now.strftime("%Y-%m-%dT%H:%M:%S"))
 
     def status(self):
+        # check if we need to update times
+        now = datetime.datetime.now()
+        self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
+        if self.tabWidget.currentIndex()==0:
+            ptime = self._piccolo.piccolo.getClock()
+            self.piccoloTime.setText(ptime.split('.')[0])
+
+        # handle status
         state = 'red'
         status = 'disconnected'
         if self._piccolo != None:
@@ -254,12 +272,27 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
             error=QtGui.QMessageBox.critical(self,errorTitle,errorMsg,QtGui.QMessageBox.Ok)
             return
 
+        # get the current piccolo time
+        ptime = self._piccolo.piccolo.getClock()
+        self.piccoloTime.setText(ptime.split('.')[0])
+
+        # get the data dir
+        self.updateMounted()
+
         # hook up integration times
         self._times.piccoloConnect(self._piccolo.piccolo)
 
         # hook up scheduler
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
+    def updateMounted(self):
+        info = self._piccolo.piccolo.info()
+        self.dataDir.setText(info['datadir'])
+        if info['datadir'] == 'not mounted':
+            self.mountDataButton.setText("mount data")
+        else:
+            self.mountDataButton.setText("unmount data")
+        
     def connectDialog(self):
         dialog = ConnectDialog()
         dialog.setConnection(self._connectionType,self._connectionData)

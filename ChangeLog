@@ -1,4 +1,9 @@
 2016-04-29 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: add option to sync time and show mount
+   directory
+ * piccolo2/player/player.ui: populate status tab with time and mount mount
+
+2016-04-29 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: always exect to get a PiccoloSpectraList when
    getSpectra is called
  * piccolo2/player/SpectraPlot.py: minor tidy up
