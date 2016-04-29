@@ -1,4 +1,9 @@
 2016-04-29 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: always exect to get a PiccoloSpectraList when
+   getSpectra is called
+ * piccolo2/player/SpectraPlot.py: minor tidy up
+
+2016-04-29 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: need to check whether incoming spectra is
    already a spectra list
  * piccolo2/player/SpectraPlot.py: update spectra as more data becomes available

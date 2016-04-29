@@ -40,8 +40,6 @@ class SpectraPlot(FigureCanvas):
         self._lines = []
         
         for s in self._spectra:
-            if not s.complete:
-                done = False
             l, = self.theplot.plot(s.waveLengths,s.pixels,label=s['SerialNumber'])
             self._lines.append(l)
             date=s['Datetime']
@@ -65,6 +63,7 @@ class SpectraPlot(FigureCanvas):
         self.theplot.autoscale_view()
         self.draw()
 
+        # tidy away once we have a complete set of spectra
         if done:
             self._lines = None
             self._spectra = None

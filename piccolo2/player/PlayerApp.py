@@ -209,11 +209,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def downloadSpectra(self,idx):
         if self._spectraList!=None and self._updateSpectraFile:
              data = self._piccolo.piccolo.getSpectra(fname=self._spectraList[idx])
-             if isinstance(data,piccolo2.client.PiccoloSpectraList):
-                 self._spectra = data
-             else:
-                 self._spectra = piccolo2.client.PiccoloSpectraList(data=data)
-             # set directions
+             self._spectra = data
              self.selectShutter.clear()
              self.selectShutter.addItems(self._spectra.directions)
 
