@@ -1,3 +1,8 @@
+2016-04-29 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: need to check whether incoming spectra is
+   already a spectra list
+ * piccolo2/player/SpectraPlot.py: update spectra as more data becomes available
+
 2016-04-28 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: attempt to catch status if the xbee is busy
    communicating
