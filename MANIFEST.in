@@ -1,0 +1,6 @@
+include README.md
+include COPYING
+include ChangeLog
+include pyuic.json
+include requirements.txt
+recursive-include piccolo2 *.ui

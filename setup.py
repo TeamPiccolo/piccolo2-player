@@ -17,7 +17,18 @@
 
 from setuptools import setup, find_packages
 from pyqt_distutils.build_ui import build_ui
-cmdclass = {'build_ui': build_ui}
+import setuptools.command.build_py
+
+class BuildPyCommand(setuptools.command.build_py.build_py):
+  """Custom build command."""
+
+  def run(self):
+    self.run_command('build_ui')
+    setuptools.command.build_py.build_py.run(self)
+
+
+cmdclass = {'build_ui': build_ui,
+            'build_py': BuildPyCommand,}
 
 setup(
     name = "piccolo2-player",
