@@ -7,6 +7,8 @@ import time
 from PyQt4 import QtCore
 
 class SpectraPlot(FigureCanvas):
+    BASE_SCALE = 1.5
+    BASE_DELTA = 0.0001
     def __init__(self,parent=None):
         super(SpectraPlot,self).__init__(Figure())
         self.setParent(parent)
@@ -22,6 +24,20 @@ class SpectraPlot(FigureCanvas):
         self.timer.timeout.connect(self.updatePlot)
         # check every 5 second
         self.timer.start(5000)
+
+    def wheelEvent(self,event):
+        ylim = self.theplot.get_ylim()
+        yrange = ylim[1]-ylim[0]
+        
+        if event.delta() > 0:
+            s = 1/self.BASE_SCALE
+        else:
+            s = self.BASE_SCALE  
+
+        y=yrange*(s-1)
+
+        self.theplot.set_ylim([ylim[0],ylim[1]+y])
+        self.draw()       
 
     @property
     def theplot(self):

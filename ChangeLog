@@ -1,3 +1,6 @@
+2016-05-17 Magnus Hagdorn
+ * piccolo2/player/SpectraPlot.py: zoom on scroll wheel
+
 2016-04-29 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: add option to sync time and show mount
    directory
