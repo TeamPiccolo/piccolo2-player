@@ -1,3 +1,20 @@
+# Copyright 2014-2016 The Piccolo Team
+#
+# This file is part of piccolo2-player.
+#
+# piccolo2-player is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# piccolo2-player is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with piccolo2-player.  If not, see <http://www.gnu.org/licenses/>.
+
 __all__ = ['main']
 
 import piccolo2.client
@@ -155,7 +172,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # check if we need to update times
         now = datetime.datetime.now()
         self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
-        if self.tabWidget.currentIndex()==0:
+        if self.tabWidget.currentIndex()==0 and self._piccolo!=None:
             ptime = self._piccolo.piccolo.getClock()
             self.piccoloTime.setText(ptime.split('.')[0])
 
