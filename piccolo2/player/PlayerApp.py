@@ -172,7 +172,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # check if we need to update times
         now = datetime.datetime.now()
         self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
-        if self.tabWidget.currentIndex()==0:
+        if self.tabWidget.currentIndex()==0 and self._piccolo!=None:
             ptime = self._piccolo.piccolo.getClock()
             self.piccoloTime.setText(ptime.split('.')[0])
 
