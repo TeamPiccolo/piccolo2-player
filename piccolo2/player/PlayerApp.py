@@ -225,7 +225,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
     def getSpectraList(self):
         if self._piccolo!=None:
-            self._spectraList = self._piccolo.piccolo.getSpectraList()
+            self._spectraList = self._piccolo.piccolo.getSpectraList(outDir=str(self.outputDir.text()))
 
             # check if we have some items in the list already
             # if so clear existing list but ignore change
