@@ -19,14 +19,25 @@
 
 import player
 import argparse
+import logging
 
 def main():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-u','--piccolo-url',metavar='URL',default='http://localhost:8080',help='set the URL of the piccolo server, default http://localhost:8080')
     group.add_argument('-x','--xbee-address',metavar='ADR',help="the address of the xbee radio")
+    parser.add_argument('-d','--debug', action='store_true',default=False,help="enable debugging output")
+
     args = parser.parse_args()
 
+    log = logging.getLogger("piccolo")
+    if args.debug:
+        log.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(name)s: %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    
     if args.xbee_address != None:
         connection = ('xbee',args.xbee_address)
     else:
