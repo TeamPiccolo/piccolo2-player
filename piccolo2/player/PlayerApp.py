@@ -131,6 +131,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # connect recording buttons
         self.startRecordingButton.clicked.connect(self.startRecording)
         self.stopRecordingButton.clicked.connect(self.stopRecording)
+        self.darkButton.clicked.connect(self.recordDark)
         self.pauseRecordingButton.clicked.connect(self.pauseRecording)
 
         # connect spectra load boxes
@@ -216,6 +217,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         if end!=None:
             kwds['end_time'] = end
         self._piccolo.piccolo.record(**kwds)
+
+    def recordDark(self):
+        self._piccolo.piccolo.dark()
 
     def pauseRecording(self):
         self._piccolo.piccolo.pause()

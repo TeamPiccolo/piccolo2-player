@@ -1,3 +1,7 @@
+2016-08-08 Magnus Hagdorn
+ * piccolo2/player/player.ui: add button to record dark spectra
+ * piccolo2/player/PlayerApp.py: hook up button
+
 2016-05-19 Magnus Hagdorn
  * piccolo2/pplayer.py: add logging
 

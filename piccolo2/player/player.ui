@@ -339,6 +339,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="darkButton">
+            <property name="text">
+             <string>Rec Dark</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="stopRecordingButton">
             <property name="toolTip">
              <string>stop data acquisition</string>
