@@ -1,4 +1,7 @@
 2017-02-14 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: handle new status
+
+2017-02-14 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: use new status class
 
 2016-08-08 Magnus Hagdorn

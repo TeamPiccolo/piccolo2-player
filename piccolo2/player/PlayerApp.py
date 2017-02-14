@@ -192,6 +192,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 self.pauseRecordingButton.setText("Unpause")
             else:
                 self.pauseRecordingButton.setText("Pause")
+            if pstatus.file_incremented:
+                state = 'yellow'
+                status += ', file_incr'
 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
