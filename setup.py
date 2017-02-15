@@ -35,6 +35,9 @@ setup(
     version = "0.1",
     namespace_packages = ['piccolo2'],
     packages = find_packages(),
+    setup_requires = [
+	"pyqt-distutils",
+	],
     install_requires = [
         "piccolo2-client",
     ],
