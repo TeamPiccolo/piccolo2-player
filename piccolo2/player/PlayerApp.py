@@ -36,6 +36,8 @@ class IntegrationTimes(QtGui.QStandardItemModel):
         self._shutters = None
         self._spectrometers = None
         self._piccolo = None
+        self._listenerID = None
+        self._updatePiccolo = True
 
         self.itemChanged.connect(self.updateIntegrationTime)
 
@@ -47,10 +49,21 @@ class IntegrationTimes(QtGui.QStandardItemModel):
             index.setForeground(QtGui.QBrush(QtGui.QColor('red')))
             return
         index.setForeground(QtGui.QBrush(QtGui.QColor('black')))
-        self._piccolo.setIntegrationTime(shutter=self._shutters[index.column()],
-                                         spectrometer=self._spectrometers[index.row()],
-                                         milliseconds=data)
+        if self._updatePiccolo:
+            self._piccolo.setIntegrationTime(shutter=self._shutters[index.column()],
+                                             spectrometer=self._spectrometers[index.row()],
+                                             milliseconds=data)
 
+
+    def updateIntegrationTimeDisplay(self,spectrometer,shutter):
+        j = self._spectrometers.index(spectrometer)
+        i = self._shutters.index(shutter)
+        data = self._piccolo.getIntegrationTime(shutter=shutter,
+                                                spectrometer=spectrometer)
+        self._updatePiccolo = False
+        self.setItem(j,i,QtGui.QStandardItem(str(data)))
+        self._updatePiccolo = True
+            
     def piccoloConnect(self,piccolo):
         self._piccolo = piccolo
         self._shutters = self._piccolo.getShutterList()
@@ -64,12 +77,9 @@ class IntegrationTimes(QtGui.QStandardItemModel):
         for j in range(len(self._spectrometers)):
             self.setVerticalHeaderItem(j,QtGui.QStandardItem(self._spectrometers[j]))
 
-        for j in range(len(self._spectrometers)):
-            for i in range(len(self._shutters)):
-                data = self._piccolo.getIntegrationTime(shutter=self._shutters[i],
-                                                        spectrometer=self._spectrometers[j])
-                self.setItem(j,i,QtGui.QStandardItem(str(data)))
-
+        for spectrometer in self._spectrometers:
+            for shutter in self._shutters:
+                self.updateIntegrationTimeDisplay(spectrometer,shutter)
 
 
 class ConnectDialog(QtGui.QDialog,connect_ui.Ui_ConnectDialog):
@@ -181,9 +191,13 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         state = 'red'
         status = 'disconnected'
         if self._piccolo != None:
-            status = 'connected'
-            state = 'green'
-            pstatus = self._piccolo.piccolo.status()
+            pstatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
+            if pstatus.connected:
+                status = 'connected'
+                state = 'green'
+            else:
+                status = 'disconnected'
+                state = 'red'
             if pstatus.busy:
                 status = 'busy'
                 state = 'orange'
@@ -196,6 +210,13 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 state = 'yellow'
                 status += ', file_incr'
 
+            if pstatus.new_message:
+                msg = self._piccolo.piccolo.getMessage(listener=self._piccolo.listenerID)
+                msg =msg.split('|')
+                if msg[0] == 'IT':
+                    spectrometer,shutter = msg[1:]
+                    self._times.updateIntegrationTimeDisplay(spectrometer,shutter)
+                
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
         self.repaint()
