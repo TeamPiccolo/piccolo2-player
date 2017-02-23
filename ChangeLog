@@ -1,4 +1,7 @@
 2017-02-23 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: display warning messages
+
+2017-02-23 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: add autointegrate button
  * piccolo2/player/player.ui: ditto
 

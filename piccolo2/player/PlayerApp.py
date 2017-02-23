@@ -217,6 +217,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 if msg[0] == 'IT':
                     spectrometer,shutter = msg[1:]
                     self._times.updateIntegrationTimeDisplay(spectrometer,shutter)
+                elif msg[0] == 'warning':
+                    QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
                 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
