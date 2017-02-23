@@ -141,6 +141,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # connect recording buttons
         self.startRecordingButton.clicked.connect(self.startRecording)
         self.stopRecordingButton.clicked.connect(self.stopRecording)
+        self.autoButton.clicked.connect(self.autoIntegrate)
         self.darkButton.clicked.connect(self.recordDark)
         self.pauseRecordingButton.clicked.connect(self.pauseRecording)
 
@@ -239,6 +240,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
     def recordDark(self):
         self._piccolo.piccolo.dark()
+
+    def autoIntegrate(self):
+        self._piccolo.piccolo.setIntegrationTimeAuto()
 
     def pauseRecording(self):
         self._piccolo.piccolo.pause()
