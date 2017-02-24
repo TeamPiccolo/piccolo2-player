@@ -232,6 +232,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         kwds['delay'] = self.delayMeasurements.value()
         kwds['nCycles'] = n
         kwds['outDir'] = str(self.outputDir.text())
+        kwds['auto'] = self.checkAutoIntegrate.checkState()==2
+        kwds['timeout'] = self.autoIntegrateTimeout.value()
         if start not in [None, False]:
             kwds['at_time'] = start
         if interval!=None:
