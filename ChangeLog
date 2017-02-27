@@ -1,4 +1,9 @@
 2017-02-27 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: fail gracefully if player becomes
+   disconnected
+ * piccolo2/player/ScheduleList.py: ditto
+
+2017-02-27 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: use new dialog to select spectrum
  * piccolo2/player/player.ui: use push button to select spectrum
  * piccolo2/player/SpectraList.py: new dialog to select spectrum

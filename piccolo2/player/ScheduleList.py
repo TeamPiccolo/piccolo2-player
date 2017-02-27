@@ -56,9 +56,10 @@ class PiccoloSchedule(QtGui.QStandardItemModel):
         self.appendRow(row)
 
     def update(self):
-        if self._piccolo == None:
+        try:
+            njobs = self._piccolo.scheduler.njobs()
+        except:
             return
-        njobs = self._piccolo.scheduler.njobs()
         for i in range(self.rowCount(),njobs):
             self.addJob(i)
             
@@ -92,7 +93,10 @@ class ScheduleListDialog(QtGui.QDialog,schedulelist_ui.Ui_ScheduleListWindow):
         self.timer.start(1000)
 
     def update(self):
-        self._scheduledJobs.update()
+        try:
+            self._scheduledJobs.update()
+        except:
+            return
 
         TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
         now = datetime.datetime.now()

@@ -184,14 +184,22 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         now = datetime.datetime.now()
         self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
         if self.tabWidget.currentIndex()==0 and self._piccolo!=None:
-            ptime = self._piccolo.piccolo.getClock()
-            self.piccoloTime.setText(ptime.split('.')[0])
+            try:
+                ptime = self._piccolo.piccolo.getClock()
+            except:
+                ptime = None
+            if ptime is not None:
+                self.piccoloTime.setText(ptime.split('.')[0])
 
         # handle status
         state = 'red'
         status = 'disconnected'
         if self._piccolo != None:
-            pstatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
+            try:
+                pstatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
+            except:
+                pstatus = piccolo2.PiccoloStatus.PiccoloStatus()
+                pstatus.connected = False
             if pstatus.connected:
                 status = 'connected'
                 state = 'green'
