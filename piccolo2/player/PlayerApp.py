@@ -24,6 +24,7 @@ import player_ui
 import connect_ui
 from ScheduleList import *
 from Schedule import ScheduleDialog
+from SpectraList import SpectraListDialog
 import datetime
 
 TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -146,16 +147,14 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.pauseRecordingButton.clicked.connect(self.pauseRecording)
 
         # connect spectra load boxes
-        self._spectraList = None
+        self._spectraList = {}
         self._updateSpectraFile = True
         self._spectra = None
         self._selectedDirection = None
-        self.selectSpectrum.addItems(['Light','Dark'])
-        self._selectedSpectrum = self.selectSpectrum.currentText()
-        self.refreshSpectraListButton.clicked.connect(self.getSpectraList)
-        self.selectFile.currentIndexChanged.connect(self.downloadSpectra)
-        self.selectShutter.currentIndexChanged.connect(self.setDirection)
-        self.selectSpectrum.currentIndexChanged.connect(self.setSpectrum)
+        self._selectedSpectrum = None
+        self.selectSpectrumButton.clicked.connect(self.downloadSpectra)
+        self.selectShutter.currentIndexChanged.connect(self.setSpectrumAndDirection)
+        self.selectSpectrum.currentIndexChanged.connect(self.setSpectrumAndDirection)
 
         # hook up scheduler
         self._scheduledJobs = PiccoloSchedule()
@@ -254,38 +253,33 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def stopRecording(self):
         self._piccolo.piccolo.abort()
 
-    def getSpectraList(self):
+    def downloadSpectra(self):
+        odir = str(self.outputDir.text())
         if self._piccolo!=None:
-            self._spectraList = self._piccolo.piccolo.getSpectraList(outDir=str(self.outputDir.text()))
+            if odir not in self._spectraList:
+                self._spectraList[odir] = []
+            self._spectraList[odir] += self._piccolo.piccolo.getSpectraList(outDir=odir,haveNFiles=len( self._spectraList[odir]))
+        else:
+            return
+        spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
+        self._spectra = self._piccolo.piccolo.getSpectra(fname=spectraName)
+        self._selectedDirection = self._spectra.directions[0]
+        spectra = []
+        for s in ['Light','Dark']:
+            if self._spectra.haveSpectrum(s):
+                spectra.append(s)
+        self._selectedSpectrum = spectra[0]
 
-            # check if we have some items in the list already
-            # if so clear existing list but ignore change
-            if self.selectFile.count() > 0:
-                self._updateSpectraFile = False
-                curSelection = self.selectFile.currentText()
-                self.selectFile.clear()
+        self.selectShutter.clear()
+        self.selectShutter.addItems(self._spectra.directions)
+        self.selectSpectrum.clear()
+        self.selectSpectrum.addItems(spectra)
 
-            self.selectFile.addItems(self._spectraList)
-
-            if not self._updateSpectraFile:
-                idx = self.selectFile.findText(curSelection)
-                self.selectFile.setCurrentIndex(idx)
-                self._updateSpectraFile = True
-
-    def downloadSpectra(self,idx):
-        if self._spectraList!=None and self._updateSpectraFile:
-             data = self._piccolo.piccolo.getSpectra(fname=self._spectraList[idx])
-             self._spectra = data
-             self.selectShutter.clear()
-             self.selectShutter.addItems(self._spectra.directions)
-
-    def setDirection(self,idx):
-        self._selectedDirection = self.selectShutter.currentText()
-        self.showSpectra()
-
-    def setSpectrum(self,idx):
+    def setSpectrumAndDirection(self):
         self._selectedSpectrum = self.selectSpectrum.currentText()
-        self.showSpectra()
+        self._selectedDirection = self.selectShutter.currentText()
+        if self._selectedSpectrum in ['Dark','Light'] and self._selectedDirection is not None:
+            self.showSpectra()
 
     def showSpectra(self):
         self.spectraPlot.setTitle("{dir} {spec}".format(dir=self._selectedDirection,spec=self._selectedSpectrum))

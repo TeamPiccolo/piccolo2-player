@@ -1,3 +1,9 @@
+2017-02-27 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: use new dialog to select spectrum
+ * piccolo2/player/player.ui: use push button to select spectrum
+ * piccolo2/player/SpectraList.py: new dialog to select spectrum
+ * piccolo2/player/spectralist.ui: ui for new dialog
+
 2017-02-24 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: hook up autointegration options
  * piccolo2/player/player.ui: add GUI elements to setup autointegration
