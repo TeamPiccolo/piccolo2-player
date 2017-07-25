@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>204</height>
+    <height>233</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    <item>
     <widget class="QRadioButton" name="connectHTTP">
      <property name="text">
-      <string>connect via http</string>
+      <string>Connect via http</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -61,7 +61,7 @@
    <item>
     <widget class="QRadioButton" name="connectXBee">
      <property name="text">
-      <string>connect via XBee Radio</string>
+      <string>Connect via XBee Radio directly</string>
      </property>
     </widget>
    </item>
@@ -70,7 +70,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>serial</string>
+        <string>Server XBee Serial Number: </string>
        </property>
       </widget>
      </item>
@@ -81,6 +81,38 @@
        </property>
        <property name="statusTip">
         <string/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QRadioButton" name="connectXBeeAuto">
+     <property name="text">
+      <string>Connect via XBee Radio network scan</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Server XBee Baudrate: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="xbeeBaud">
+       <property name="text">
+        <string>115200</string>
        </property>
       </widget>
      </item>

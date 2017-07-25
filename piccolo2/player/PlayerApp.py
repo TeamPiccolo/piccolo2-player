@@ -95,6 +95,9 @@ class ConnectDialog(QtGui.QDialog,connect_ui.Ui_ConnectDialog):
         elif connection == 'xbee':
             self.connectXBee.setChecked(True)
             self.xbeeSerial.setText(data)
+        elif connection == 'xbee auto':
+            self.connectXBeeAuto.setChecked(True)
+            self.xbeeBaud.setText(data)
         else:
             raise RuntimeError, 'unkown connection type',connection
 
@@ -104,6 +107,8 @@ class ConnectDialog(QtGui.QDialog,connect_ui.Ui_ConnectDialog):
             return 'http'
         elif self.connectXBee.isChecked():
             return 'xbee'
+        elif self.connectXBeeAuto.isChecked():
+            return 'xbee auto'
         else:
             raise RuntimeError, 'Unkown connection method'
 
@@ -120,6 +125,8 @@ class ConnectDialog(QtGui.QDialog,connect_ui.Ui_ConnectDialog):
             data = self.serverURL.text()
         elif method == 'xbee':
             data = self.xbeeSerial.text()
+        elif method == 'xbee auto':
+            data = self.xbeeBaud.text()
         return method,str(data)
 
 class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
@@ -154,6 +161,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self._selectedSpectrum = None
         self.selectSpectrumButton.clicked.connect(self.downloadSpectra)
         self.selectShutter.currentIndexChanged.connect(self.setSpectrumAndDirection)
+        self.selectSpectrometer.currentIndexChanged.connect(self.setSpectrumAndDirection)
         self.selectSpectrum.currentIndexChanged.connect(self.setSpectrumAndDirection)
 
         # hook up scheduler
@@ -172,12 +180,32 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.statusbar.addWidget(self.statusLabel)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.status)
-        # check every second
-        self.timer.start(1000)        
+        # check every 5 seconds
+        self.timer.start(5000)        
 
     def syncTime(self):
         now = datetime.datetime.now()
         self._piccolo.piccolo.setClock(clock=now.strftime("%Y-%m-%dT%H:%M:%S"))
+
+    def floatToDDMMSS(self,coord):
+        "helper method to pretty-fy gps locations" 
+        if isinstance(coord,float):
+            formatstr = "{:d}\xB0 {:02d}' {:08.5f}\""
+            if coord < 0:
+                coord *= -1 
+                formatstr = "-" + formatstr
+            deg,minute = divmod(coord*60,60)
+            minute,sec = divmod(minute*60,60)
+            return formatstr.format(int(deg),int(minute),sec)
+        else:
+            return str(coord)
+
+    def floatToUnits(self,val,units):
+        "helper method to pretty-fy gps metadata" 
+        if isinstance(val,float):
+            return '{:.2f} {:s}'.format(val,units)
+        else:
+            return str(val)
 
     def status(self):
         # check if we need to update times
@@ -190,6 +218,13 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 ptime = None
             if ptime is not None:
                 self.piccoloTime.setText(ptime.split('.')[0])
+
+            #update location labels
+            plocation = self._piccolo.piccolo.getLocation()
+            self.longitudeLabel.setText(self.floatToDDMMSS(plocation['lon']))
+            self.latitudeLabel.setText(self.floatToDDMMSS(plocation['lat']))
+            self.altitudeLabel.setText(self.floatToUnits(plocation['alt'],'m'))
+            self.speedLabel.setText(self.floatToUnits(plocation['speed'],'m/s'))
 
         # handle status
         state = 'red'
@@ -279,20 +314,46 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self._selectedSpectrum = spectra[0]
 
         self.selectShutter.clear()
+        if len(self._spectra.directions) == 2:
+            self.selectShutter.addItems(["Bidirectional"])
         self.selectShutter.addItems(self._spectra.directions)
+
+        self.selectSpectrometer.clear()
+        self._spectrometers = list(set([s['SerialNumber'] for s in self._spectra]))
+        if len(self._spectrometers) > 1:
+            self.selectSpectrometer.addItems(["All Spectrometers"])
+        self.selectSpectrometer.addItems(self._spectrometers)
+
+
         self.selectSpectrum.clear()
         self.selectSpectrum.addItems(spectra)
 
     def setSpectrumAndDirection(self):
         self._selectedSpectrum = self.selectSpectrum.currentText()
         self._selectedDirection = self.selectShutter.currentText()
+        self._selectedSpectrometer = self.selectSpectrometer.currentText()
         if self._selectedSpectrum in ['Dark','Light'] and self._selectedDirection is not None:
             self.showSpectra()
 
     def showSpectra(self):
         self.spectraPlot.setTitle("{dir} {spec}".format(dir=self._selectedDirection,spec=self._selectedSpectrum))
-        spectra = self._spectra.getSpectra(self._selectedDirection, self._selectedSpectrum)
-        self.spectraPlot.plotSpectra(spectra)
+        if self._selectedDirection == "Bidirectional":
+            spectra = []
+            directions = []
+            for d in self._spectra.directions:
+                new_spectra=self._spectra.getSpectra(d, self._selectedSpectrum)
+                directions+=[d]*len(new_spectra)
+                spectra+=new_spectra
+        else:
+            spectra = self._spectra.getSpectra(self._selectedDirection, self._selectedSpectrum)
+            directions = [str(self._selectedDirection)]*len(spectra)
+        
+        if(self._selectedSpectrometer == "All Spectrometers"):
+            spectrometers = self._spectrometers
+        else:
+            spectrometers = self._selectedSpectrometer
+
+        self.spectraPlot.plotSpectra(spectra,directions,spectrometers)
 
     def connect(self,connection,data):
         ok = True
@@ -305,11 +366,22 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 ok = False
                 errorTitle = 'failed to connect'
                 errorMsg = 'failed to connect to {}'.format(data)
+
         elif connection == 'xbee':
             self._connectionType = 'xbee'
             self._connectionData = data
             try:
-                self._piccolo = piccolo2.client.PiccoloXbeeClient(data)
+                self._piccolo = piccolo2.client.PiccoloXbeeClient(address=data)
+            except:
+                ok = False
+                errorTitle = 'failed to connect'
+                errorMsg = 'failed to connect to {}'.format(data)  
+
+        elif connection == 'xbee auto':
+            self._connectionType = 'xbee auto'
+            self._connectionData = data
+            try:
+                self._piccolo = piccolo2.client.PiccoloXbeeClient(baudrate=data)
             except:
                 ok = False
                 errorTitle = 'failed to connect'

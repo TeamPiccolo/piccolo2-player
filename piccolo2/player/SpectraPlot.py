@@ -22,10 +22,24 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import time
 from PyQt4 import QtCore
+import numpy as np
+
 
 class SpectraPlot(FigureCanvas):
     BASE_SCALE = 1.5
     BASE_DELTA = 0.0001
+
+    COLORS= [
+        {
+            "Upwelling":"royalblue",
+            "Downwelling":"navy"
+        },
+        {
+            "Upwelling":"tomato",
+            "Downwelling":"darkred"
+        },
+
+    ]
     def __init__(self,parent=None):
         super(SpectraPlot,self).__init__(Figure())
         self.setParent(parent)
@@ -66,14 +80,43 @@ class SpectraPlot(FigureCanvas):
         self.theplot.clear()
         self.theplot.set_title(title)
 
-    def plotSpectra(self,spectra):
+    def plotSpectra(self,spectra,directions,spectrometers):
         date=None
 
         self._spectra = spectra
+        self._spectrometers = spectrometers
         self._lines = []
         
-        for s in self._spectra:
-            l, = self.theplot.plot(s.waveLengths,s.pixels,label=s['SerialNumber'])
+        colors = {}
+        c_idx = 0
+        for i in range( len(self._spectra) ):
+            s = self._spectra[i]
+
+            if not s['SerialNumber'] in colors:
+                #assign a color pallette to the spectrometer
+                colors[s['SerialNumber']] = SpectraPlot.COLORS[c_idx]
+                c_idx+=1
+
+            if not s['SerialNumber'] in spectrometers:
+                #only plot specified serial number(s)
+                continue
+
+            if s['SerialNumber'].startswith("QEP"):
+                pixels      = np.asarray(s.pixels,dtype=float)
+                pixels[pixels >= 100000] = np.nan
+            else:
+                pixels          = s.pixels
+            waveLengths     = s.waveLengths
+                
+
+            if len(set(directions)) > 1:
+                #if there are multiple directions, label them
+                short_dir = directions[i].replace('welling','')
+                label = "{:s} ({:s})".format(s['SerialNumber'],short_dir)
+            else:
+                label = s['SerialNumber']
+            color = colors[s['SerialNumber']][directions[i]]
+            l, = self.theplot.plot(waveLengths,pixels,label=label,color=color,lw=3)
             self._lines.append(l)
             date=s['Datetime']
         if len(spectra)>0:
@@ -84,22 +127,30 @@ class SpectraPlot(FigureCanvas):
 
     def updatePlot(self):
 
-        if self._spectra is None:
+        if self._spectra is None or self._spectrometers is None:
+            return
+
+        used_spectra = [s for s in self._spectra if s["SerialNumber"] in self._spectrometers]
+
+        if used_spectra is None:
             return
         
         done = True
-        for i in range(len(self._spectra)):
-            if not self._spectra[i].complete:
+
+        for i in range(len(used_spectra)):
+            if not used_spectra[i].complete:
                 done = False
-            self._lines[i].set_ydata(self._spectra[i].pixels)
+            if used_spectra[i]['SerialNumber'].startswith("QEP"):
+                pixels      = np.asarray(used_spectra[i].pixels,dtype=float)
+                pixels[pixels >= 100000] = np.nan
+            else:
+                pixels      = used_spectra[i].pixels
+            
+            self._lines[i].set_ydata(pixels)
+            
         self.theplot.relim()
         self.theplot.autoscale_view()
         self.draw()
-
-        # tidy away once we have a complete set of spectra
-        if done:
-            self._lines = None
-            self._spectra = None
 
     def save(self,fname):
         self.figure.savefig(fname)
