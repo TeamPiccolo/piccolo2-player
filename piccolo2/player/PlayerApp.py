@@ -305,10 +305,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         else:
             return
         spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
+        print()
 
         if spectraName is None:
             return
-        self._spectra = self._piccolo.piccolo.getSpectra(fname=spectraName)
+        self._spectra = self._piccolo.piccolo.getSpectra(fname=spectraName, simplify = self.downloadSimple.isChecked())
         self._selectedDirection = self._spectra.directions[0]
         spectra = []
         for s in ['Light','Dark']:
