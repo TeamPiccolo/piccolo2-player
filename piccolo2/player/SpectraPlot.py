@@ -38,6 +38,10 @@ class SpectraPlot(FigureCanvas):
             "Upwelling":"tomato",
             "Downwelling":"darkred"
         },
+        {
+            "Upwelling":"limegreen",
+            "Downwelling":"green"
+        },
 
     ]
     def __init__(self,parent=None):
@@ -101,12 +105,11 @@ class SpectraPlot(FigureCanvas):
                 #only plot specified serial number(s)
                 continue
 
+            pixels = np.asarray(s.pixels,dtype=float)
+            waveLengths = s.waveLengths
             if s['SerialNumber'].startswith("QEP"):
-                pixels      = np.asarray(s.pixels,dtype=float)
                 pixels[pixels >= 100000] = np.nan
-            else:
-                pixels          = s.pixels
-            waveLengths     = s.waveLengths
+            pixels[pixels==-1] = np.nan
                 
 
             if len(set(directions)) > 1:
@@ -140,11 +143,10 @@ class SpectraPlot(FigureCanvas):
         for i in range(len(used_spectra)):
             if not used_spectra[i].complete:
                 done = False
+            pixels = np.asarray(used_spectra[i].pixels,dtype=float)
             if used_spectra[i]['SerialNumber'].startswith("QEP"):
-                pixels      = np.asarray(used_spectra[i].pixels,dtype=float)
                 pixels[pixels >= 100000] = np.nan
-            else:
-                pixels      = used_spectra[i].pixels
+            pixels[pixels==-1] = np.nan
             
             self._lines[i].set_ydata(pixels)
             

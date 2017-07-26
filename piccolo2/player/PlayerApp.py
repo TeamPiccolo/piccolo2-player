@@ -305,6 +305,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         else:
             return
         spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
+
+        if spectraName is None:
+            return
         self._spectra = self._piccolo.piccolo.getSpectra(fname=spectraName)
         self._selectedDirection = self._spectra.directions[0]
         spectra = []
@@ -441,5 +444,6 @@ def main(connection):
     app = QtGui.QApplication([])
     form = PlayerApp()
     form.show()
-    form.connect(connection[0],connection[1])
+    if connection:
+        form.connect(connection[0],connection[1])
     app.exec_()

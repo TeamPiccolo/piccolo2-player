@@ -547,7 +547,11 @@
            </spacer>
           </item>
           <item>
-           <widget class="QComboBox" name="selectSpectrometer"/>
+           <widget class="QComboBox" name="selectSpectrometer">
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QComboBox" name="selectShutter">
