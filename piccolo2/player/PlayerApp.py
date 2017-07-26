@@ -305,7 +305,6 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         else:
             return
         spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
-        print()
 
         if spectraName is None:
             return
