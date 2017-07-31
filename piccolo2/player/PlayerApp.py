@@ -221,6 +221,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
             #update location labels
             plocation = self._piccolo.piccolo.getLocation()
+            self.gpsTime.setText(plocation['time'])
             self.longitudeLabel.setText(self.floatToDDMMSS(plocation['lon']))
             self.latitudeLabel.setText(self.floatToDDMMSS(plocation['lat']))
             self.altitudeLabel.setText(self.floatToUnits(plocation['alt'],'m'))

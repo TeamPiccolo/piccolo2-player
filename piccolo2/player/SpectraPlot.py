@@ -20,6 +20,7 @@ __all__ = ['SpectraPlot']
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.lines as mlines
 import time
 from PyQt4 import QtCore
 import numpy as np
@@ -44,6 +45,7 @@ class SpectraPlot(FigureCanvas):
         },
 
     ]
+
     def __init__(self,parent=None):
         super(SpectraPlot,self).__init__(Figure())
         self.setParent(parent)
@@ -51,7 +53,7 @@ class SpectraPlot(FigureCanvas):
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self._theplot = None
-
+        self._twinplot = None
         self._lines = None
         self._spectra = None
         
@@ -61,28 +63,47 @@ class SpectraPlot(FigureCanvas):
         self.timer.start(5000)
 
     def wheelEvent(self,event):
-        ylim = self.theplot.get_ylim()
-        yrange = ylim[1]-ylim[0]
-        
-        if event.delta() > 0:
-            s = 1/self.BASE_SCALE
-        else:
-            s = self.BASE_SCALE  
+        for plot in self.theplot,self.twinplot:
+            ylim = plot.get_ylim()
+            yrange = ylim[1]-ylim[0]
+            
+            if event.delta() > 0:
+                s = 1/self.BASE_SCALE
+            else:
+                s = self.BASE_SCALE  
 
-        y=yrange*(s-1)
+            y=yrange*(s-1)
 
-        self.theplot.set_ylim([ylim[0],ylim[1]+y])
+            plot.set_ylim([ylim[0],ylim[1]+y])
         self.draw()       
 
     @property
     def theplot(self):
-        if self._theplot == None:
+        if self._theplot is None:
             self._theplot = self.figure.add_subplot(111)
         return self._theplot
+
+    @property
+    def twinplot(self):
+        if self._twinplot is None:
+            self._twinplot = self.theplot.twinx()
+        return self._twinplot
+
 
     def setTitle(self,title):
         self.theplot.clear()
         self.theplot.set_title(title)
+        self.twinplot.clear()
+
+
+    def pixelsAsSaturationPct(self,pixels,spectrum):
+        if 'SaturationLevel' in spectrum:
+            return "Percent Saturation",100.*pixels/spectrum['SaturationLevel']
+        else:
+            return "Pixel Count",pixels
+
+    def zero_lower_ylim(self,axis):
+        axis.set_ylim(0,axis.get_ylim()[1])
 
     def plotSpectra(self,spectra,directions,spectrometers):
         date=None
@@ -90,15 +111,20 @@ class SpectraPlot(FigureCanvas):
         self._spectra = spectra
         self._spectrometers = spectrometers
         self._lines = []
-        
+        self._labels = []
+        self._line_handles = []
+
         colors = {}
         c_idx = 0
+        plots = [self.theplot,self.twinplot]
+        used_plots = [False]*len(plots)
         for i in range( len(self._spectra) ):
             s = self._spectra[i]
 
             if not s['SerialNumber'] in colors:
                 #assign a color pallette to the spectrometer
                 colors[s['SerialNumber']] = SpectraPlot.COLORS[c_idx]
+                colors[s['SerialNumber']].update({'plot':plots[c_idx]})
                 c_idx+=1
 
             if not s['SerialNumber'] in spectrometers:
@@ -110,22 +136,45 @@ class SpectraPlot(FigureCanvas):
             if s['SerialNumber'].startswith("QEP"):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
+            ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
                 
-
             if len(set(directions)) > 1:
                 #if there are multiple directions, label them
                 short_dir = directions[i].replace('welling','')
                 label = "{:s} ({:s})".format(s['SerialNumber'],short_dir)
             else:
                 label = s['SerialNumber']
+
+            pct_label = label# + self.getStaurationPercent(pixels,s)
+
             color = colors[s['SerialNumber']][directions[i]]
-            l, = self.theplot.plot(waveLengths,pixels,label=label,color=color,lw=3)
+            curr_plot = colors[s['SerialNumber']]['plot']
+            #spaghetti-ish code to determine which plots are actually used
+            #will probably want to refactor
+            used_plots[plots.index(curr_plot)] = True
+
+            label_color = colors[s['SerialNumber']]['Downwelling']
+            curr_plot.set_ylabel(ylabel,color=label_color)
+            curr_plot.set_xlabel("Wavelength (nm)")
+            [t.set_color(label_color)for t in curr_plot.get_yticklabels()]
+
+
+            l, = curr_plot.plot(waveLengths,pixels,label=pct_label,color=color,lw=3)
+            
+            #ensure all plots have the same lower limit
+            #self.zero_lower_ylim(curr_plot)
             self._lines.append(l)
+            self._labels.append(label)
+
             date=s['Datetime']
         if len(spectra)>0:
             t = self.theplot.get_title()
             self.theplot.set_title('{}\n{}'.format(t,date))
-            self.theplot.legend()
+            self.theplot.legend(handles=self._lines)
+            #hide unused axes
+            for i,is_used in enumerate(used_plots):
+                plots[i].get_yaxis().set_visible(is_used)
+
         self.draw()
 
     def updatePlot(self):
@@ -147,11 +196,23 @@ class SpectraPlot(FigureCanvas):
             if used_spectra[i]['SerialNumber'].startswith("QEP"):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
+            ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
+            
+            
+
+            pct_label = self._labels[i] #+ self.getStaurationPercent(pixels,s)
             
             self._lines[i].set_ydata(pixels)
+            self._lines[i]._axes.set_ylabel(ylabel)
+            self._lines[i].set_label(pct_label)
             
         self.theplot.relim()
+        self.twinplot.relim()
         self.theplot.autoscale_view()
+        self.twinplot.autoscale_view()
+        #self.zero_lower_ylim(self.theplot)
+        #self.zero_lower_ylim(self.twinplot)
+        self.theplot.legend(handles=self._lines)
         self.draw()
 
     def save(self,fname):
