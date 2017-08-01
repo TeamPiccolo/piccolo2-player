@@ -44,6 +44,13 @@ class IntegrationTimes(QtGui.QStandardItemModel):
 
 
     def updateIntegrationTime(self,index):
+        if index.column() >= len(self._shutters):
+            #the last column is spectrometer enable/disable switches
+            if(index.checkState()):
+                index.setText("true")
+            else:
+                index.setText("false")
+            return
         try:
             data = float(index.text())
         except:
@@ -71,17 +78,26 @@ class IntegrationTimes(QtGui.QStandardItemModel):
         self._spectrometers = self._piccolo.getSpectrometerList()
 
         self.setRowCount(len(self._spectrometers))
-        self.setColumnCount(len(self._shutters))
-
+        self.setColumnCount(len(self._shutters)+1)
+        last_col = len(self._shutters)
         for i in range(len(self._shutters)):
             self.setHorizontalHeaderItem(i,QtGui.QStandardItem(self._shutters[i]))
+        self.setHorizontalHeaderItem(last_col,QtGui.QStandardItem("enabled"))
+
         for j in range(len(self._spectrometers)):
-            self.setVerticalHeaderItem(j,QtGui.QStandardItem(self._spectrometers[j]))
+            spec_item = QtGui.QStandardItem(self._spectrometers[j])
+            self.setVerticalHeaderItem(j,spec_item)
+
+            enable_item = QtGui.QStandardItem("true")
+            enable_item.setCheckable(True)
+            self.setItem(j,last_col,enable_item)
+            
 
         for spectrometer in self._spectrometers:
             for shutter in self._shutters:
                 self.updateIntegrationTimeDisplay(spectrometer,shutter)
-
+        
+        
 
 class ConnectDialog(QtGui.QDialog,connect_ui.Ui_ConnectDialog):
     def __init__(self,parent=None):
@@ -269,7 +285,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
     def startRecording(self,start=None,end=None,interval=None):
         n = self.repeatMeasurements.value()
-        if n==0:
+        if n==0 or self.infRepeat.isChecked():
             n='Inf'
         kwds ={}
         kwds['delay'] = self.delayMeasurements.value()

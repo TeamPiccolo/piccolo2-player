@@ -21,7 +21,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_Status">
        <property name="enabled">
@@ -368,12 +368,22 @@
               <property name="statusTip">
                <string/>
               </property>
+              <property name="maximum">
+               <number>999999</number>
+              </property>
               <property name="value">
                <number>1</number>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="infRepeat">
+            <property name="text">
+             <string>Repeat Indefinitely</string>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_2">
