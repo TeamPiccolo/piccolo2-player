@@ -46,11 +46,16 @@ class IntegrationTimes(QtGui.QStandardItemModel):
     def updateIntegrationTime(self,index):
         if index.column() >= len(self._shutters):
             #the last column is spectrometer enable/disable switches
+            isChecked = index.checkState()
             if(index.checkState()):
                 index.setText("true")
             else:
                 index.setText("false")
+            if self._updatePiccolo:
+                self._piccolo.setSpectrometerEnabledStatus(enabled=isChecked,
+                    spectrometer=self._spectrometers[index.row()])
             return
+
         try:
             data = float(index.text())
         except:
@@ -90,6 +95,8 @@ class IntegrationTimes(QtGui.QStandardItemModel):
 
             enable_item = QtGui.QStandardItem("true")
             enable_item.setCheckable(True)
+            enable_item.setEditable(False)
+            enable_item.setCheckState(2)
             self.setItem(j,last_col,enable_item)
             
 
@@ -194,10 +201,15 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.status)
+        self.statusTimer = QtCore.QTimer()
+        self.statusTimer.timeout.connect(self.status)
         # check every 5 seconds
-        self.timer.start(5000)        
+        self.statusTimer.start(5000)        
+        #check telemetry more regularly
+        self.telemTimer = QtCore.QTimer()
+        self.telemTimer.timeout.connect(self.telemetryStatus)
+        # check every second
+        self.telemTimer.start(1000)        
 
     def syncTime(self):
         now = datetime.datetime.now()
@@ -223,7 +235,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         else:
             return str(val)
 
-    def status(self):
+
+    def telemetryStatus(self):
         # check if we need to update times
         now = datetime.datetime.now()
         self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -236,13 +249,27 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 self.piccoloTime.setText(ptime.split('.')[0])
 
             #update location labels
-            plocation = self._piccolo.piccolo.getLocation()
-            self.gpsTime.setText(plocation['time'])
-            self.longitudeLabel.setText(self.floatToDDMMSS(plocation['lon']))
-            self.latitudeLabel.setText(self.floatToDDMMSS(plocation['lat']))
-            self.altitudeLabel.setText(self.floatToUnits(plocation['alt'],'m'))
-            self.speedLabel.setText(self.floatToUnits(plocation['speed'],'m/s'))
+            if "GPS" in self._peripherals:
+                self.gpsContainerWidget.setHidden(False)
+                plocation = self._piccolo.piccolo.getAuxRecord(aux_inst="GPS")
+                self.gpsTime.setText(plocation['time'])
+                self.longitudeLabel.setText(self.floatToDDMMSS(plocation['lon']))
+                self.latitudeLabel.setText(self.floatToDDMMSS(plocation['lat']))
+                self.altitudeLabel.setText(self.floatToUnits(plocation['alt'],'m'))
+                self.speedLabel.setText(self.floatToUnits(plocation['speed'],'m/s'))
+            else:
+                self.gpsContainerWidget.setHidden(True)
 
+            #update altimeter label
+            if "Altimeter" in self._peripherals:
+                self.altitudeContainerWidget.setHidden(False)
+                pAltitude = self._piccolo.piccolo.getAuxRecord(aux_inst="Altimeter")
+                self.altimeterLabel.setText(pAltitude+" m")
+            else:
+                self.altitudeContainerWidget.setHidden(True)
+
+
+    def status(self):
         # handle status
         state = 'red'
         status = 'disconnected'
@@ -417,6 +444,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # get the current piccolo time
         ptime = self._piccolo.piccolo.getClock()
         self.piccoloTime.setText(ptime.split('.')[0])
+
+
+        #get the piccolo's attached peripherals
+        self._peripherals = self._piccolo.piccolo.getAttachedAuxInstruments()
 
         # get the data dir
         self.updateMounted()
