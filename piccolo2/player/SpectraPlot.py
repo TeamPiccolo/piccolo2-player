@@ -56,6 +56,7 @@ class SpectraPlot(FigureCanvas):
         self._twinplot = None
         self._lines = None
         self._spectra = None
+        self._units = None
         
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
@@ -90,6 +91,9 @@ class SpectraPlot(FigureCanvas):
         return self._twinplot
 
 
+
+    def setUnits(self):
+        pass
     def setTitle(self,title):
         self.theplot.clear()
         self.theplot.set_title(title)
@@ -100,12 +104,13 @@ class SpectraPlot(FigureCanvas):
         if 'SaturationLevel' in spectrum:
             return "Percent Saturation",100.*pixels/spectrum['SaturationLevel']
         else:
-            return "Pixel Count",pixels
+            return "DN Count",pixels
 
     def zero_lower_ylim(self,axis):
         axis.set_ylim(0,axis.get_ylim()[1])
 
-    def plotSpectra(self,spectra,directions,spectrometers):
+    def plotSpectra(self,spectra,directions,spectrometers,units="Saturation %"):
+        print "plotSpectra called"
         date=None
 
         self._spectra = spectra
@@ -113,6 +118,7 @@ class SpectraPlot(FigureCanvas):
         self._lines = []
         self._labels = []
         self._line_handles = []
+        self._units = units
 
         colors = {}
         c_idx = 0
@@ -136,7 +142,10 @@ class SpectraPlot(FigureCanvas):
             if s['SerialNumber'].startswith("QEP"):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
-            ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
+            if self._units == "Saturation %":
+                ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
+            else:
+                ylabel = "DN Count"
                 
             if len(set(directions)) > 1:
                 #if there are multiple directions, label them
@@ -196,7 +205,10 @@ class SpectraPlot(FigureCanvas):
             if used_spectra[i]['SerialNumber'].startswith("QEP"):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
-            ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
+            if self._units == "Saturation %":
+                ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
+            else:
+                ylabel = "DN Count"
             
             
 

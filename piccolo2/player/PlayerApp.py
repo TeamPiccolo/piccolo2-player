@@ -179,14 +179,19 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # connect spectra load boxes
         self._spectraList = {}
         self._updateSpectraFile = True
+        self._currentSpectrum = None
         self._spectra = None
         self._selectedDirection = None
         self._selectedSpectrum = None
         self.selectSpectrumButton.clicked.connect(self.downloadSpectra)
+        self.downloadLatest.clicked.connect(self.downloadLatestSpectrum)
         self.selectShutter.currentIndexChanged.connect(self.setSpectrumAndDirection)
         self.selectSpectrometer.currentIndexChanged.connect(self.setSpectrumAndDirection)
         self.selectSpectrum.currentIndexChanged.connect(self.setSpectrumAndDirection)
 
+
+        # toggle spectra plotting (prevents multiple rapid calls)
+        self._ableToPlot = True
         # hook up scheduler
         self._scheduledJobs = PiccoloSchedule()
         self._scheduledJobsDialog = ScheduleListDialog(scheduledJobs = self._scheduledJobs)
@@ -340,18 +345,32 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def stopRecording(self):
         self._piccolo.piccolo.abort()
 
-    def downloadSpectra(self):
+    def downloadLatestSpectrum(self):
         odir = str(self.outputDir.text())
-        if self._piccolo!=None:
+        spectrum = self._piccolo.piccolo.getMostRecentSpectrum(outDir=odir)
+        self.downloadSpectra(spectrum)
+
+    def downloadSpectra(self,spectraName=None):
+        odir = str(self.outputDir.text())
+        if self._piccolo!=None and not spectraName:
             if odir not in self._spectraList:
                 self._spectraList[odir] = []
             self._spectraList[odir] += self._piccolo.piccolo.getSpectraList(outDir=odir,haveNFiles=len( self._spectraList[odir]))
-        else:
-            return
-        spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
+            spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
 
-        if spectraName is None:
+        elif self._piccolo is None:
             return
+
+        print spectraName,self._currentSpectrum
+        if spectraName is None or spectraName == self._currentSpectrum:
+            #trying to download the same spectrum multiple times in a row
+            #messes with the chunking system
+            return
+
+        self._currentSpectrum = spectraName
+        
+        self._ableToPlot = False
+
         self._spectra = self._piccolo.piccolo.getSpectra(fname=spectraName, simplify = self.downloadSimple.isChecked())
         self._selectedDirection = self._spectra.directions[0]
         spectra = []
@@ -375,7 +394,13 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.selectSpectrum.clear()
         self.selectSpectrum.addItems(spectra)
 
+        self._ableToPlot = True
+        self.setSpectrumAndDirection()
+
     def setSpectrumAndDirection(self):
+        if not self._ableToPlot:
+            return
+
         self._selectedSpectrum = self.selectSpectrum.currentText()
         self._selectedDirection = self.selectShutter.currentText()
         self._selectedSpectrometer = self.selectSpectrometer.currentText()
