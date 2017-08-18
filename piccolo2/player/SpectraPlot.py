@@ -90,10 +90,10 @@ class SpectraPlot(FigureCanvas):
             self._twinplot = self.theplot.twinx()
         return self._twinplot
 
+    def setUnits(self,units):
+        self._units = units
+        self.updatePlot()
 
-
-    def setUnits(self):
-        pass
     def setTitle(self,title):
         self.theplot.clear()
         self.theplot.set_title(title)
@@ -101,7 +101,8 @@ class SpectraPlot(FigureCanvas):
 
 
     def pixelsAsSaturationPct(self,pixels,spectrum):
-        if 'SaturationLevel' in spectrum:
+        if(self._units == "Saturation %" and 'SaturationLevel' in spectrum 
+                and spectrum['SaturationLevel']!=1):
             return "Percent Saturation",100.*pixels/spectrum['SaturationLevel']
         else:
             return "DN Count",pixels
@@ -142,10 +143,7 @@ class SpectraPlot(FigureCanvas):
             if s['SerialNumber'].startswith("QEP"):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
-            if self._units == "Saturation %":
-                ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
-            else:
-                ylabel = "DN Count"
+            ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
                 
             if len(set(directions)) > 1:
                 #if there are multiple directions, label them
@@ -186,6 +184,7 @@ class SpectraPlot(FigureCanvas):
 
         self.draw()
 
+
     def updatePlot(self):
 
         if self._spectra is None or self._spectrometers is None:
@@ -205,12 +204,7 @@ class SpectraPlot(FigureCanvas):
             if used_spectra[i]['SerialNumber'].startswith("QEP"):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
-            if self._units == "Saturation %":
-                ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
-            else:
-                ylabel = "DN Count"
-            
-            
+            ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
 
             pct_label = self._labels[i] #+ self.getStaurationPercent(pixels,s)
             

@@ -656,9 +656,9 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="downloadLatest">
+             <widget class="QCheckBox" name="showLatest">
               <property name="text">
-               <string>Most Recent</string>
+               <string>Show Latest</string>
               </property>
              </widget>
             </item>
