@@ -369,12 +369,15 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
     def downloadLatestSpectrum(self):
         odir = str(self.outputDir.text())
-        #need to spoof chunking system, will come up with better alternative
+        
+        #TODO: can't get chunking to work with no filename
+        simplify = (self.downloadSimple.isChecked() 
+                or isinstance(self._piccolo,piccolo2.client.PiccoloXbeeClient))
         self._spectra = self._piccolo.piccolo.getSpectra(outDir=odir,
-                fname='', simplify = self.downloadSimple.isChecked())
+                fname='', simplify = simplify)
 
         #unlike downloadSpectra, we need to find out what file we just got
-        self._currentFileName = self._spectra[0]['FileName']
+        #self._currentFileName = self._spectra[0]['FileName']
         self._plotDownloadedSpectrum()
 
     def updateRealTime(self):
