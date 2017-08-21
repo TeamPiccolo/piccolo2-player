@@ -190,6 +190,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.selectSpectrum.currentIndexChanged.connect(self.setSpectrumAndDirection)
         self.displayUnits.currentIndexChanged.connect(lambda: self.spectraPlot
                 .setUnits(self.displayUnits.currentText()))
+        self.showLatest.clicked.connect(self.updateRealTime)
 
 
         # toggle spectra plotting (prevents multiple rapid calls)
@@ -252,10 +253,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
 
     def updateSpectrumTimer(self):
-        interval = max(2000, self._piccolo.piccolo.getTotalIntegrationTime())
+        integrationTime = self._piccolo.piccolo.getTotalIntegrationTime()
+        interval = max(2000, int(float(integrationTime)))
         print(interval)
         if interval != self.spectrumInterval:
-            self.spectrumInterval = interval
+            self.spectrumInterval = int(float(interval))
             self.spectrumTimer.setInterval(int(self.spectrumInterval))
             
     def telemetryStatus(self):
