@@ -56,6 +56,7 @@ class SpectraPlot(FigureCanvas):
         self._twinplot = None
         self._lines = None
         self._spectra = None
+        self._units = None
         
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
@@ -89,6 +90,9 @@ class SpectraPlot(FigureCanvas):
             self._twinplot = self.theplot.twinx()
         return self._twinplot
 
+    def setUnits(self,units):
+        self._units = units
+        self.updatePlot()
 
     def setTitle(self,title):
         self.theplot.clear()
@@ -97,15 +101,17 @@ class SpectraPlot(FigureCanvas):
 
 
     def pixelsAsSaturationPct(self,pixels,spectrum):
-        if 'SaturationLevel' in spectrum:
+        if(self._units == "Saturation %" and 'SaturationLevel' in spectrum 
+                and spectrum['SaturationLevel']!=1):
             return "Percent Saturation",100.*pixels/spectrum['SaturationLevel']
         else:
-            return "Pixel Count",pixels
+            return "DN Count",pixels
 
     def zero_lower_ylim(self,axis):
         axis.set_ylim(0,axis.get_ylim()[1])
 
-    def plotSpectra(self,spectra,directions,spectrometers):
+    def plotSpectra(self,spectra,directions,spectrometers,units="Saturation %"):
+        print "plotSpectra called"
         date=None
 
         self._spectra = spectra
@@ -113,6 +119,7 @@ class SpectraPlot(FigureCanvas):
         self._lines = []
         self._labels = []
         self._line_handles = []
+        self._units = units
 
         colors = {}
         c_idx = 0
@@ -177,6 +184,7 @@ class SpectraPlot(FigureCanvas):
 
         self.draw()
 
+
     def updatePlot(self):
 
         if self._spectra is None or self._spectrometers is None:
@@ -197,8 +205,6 @@ class SpectraPlot(FigureCanvas):
                 pixels[pixels >= 100000] = np.nan
             pixels[pixels==-1] = np.nan
             ylabel,pixels = self.pixelsAsSaturationPct(pixels,s)
-            
-            
 
             pct_label = self._labels[i] #+ self.getStaurationPercent(pixels,s)
             

@@ -18,6 +18,7 @@
 __all__ = ['main']
 
 import piccolo2.client
+from piccolo2 import PiccoloCompress
 
 from PyQt4 import QtGui, QtCore
 import player_ui
@@ -46,11 +47,16 @@ class IntegrationTimes(QtGui.QStandardItemModel):
     def updateIntegrationTime(self,index):
         if index.column() >= len(self._shutters):
             #the last column is spectrometer enable/disable switches
+            isChecked = index.checkState()
             if(index.checkState()):
                 index.setText("true")
             else:
                 index.setText("false")
+            if self._updatePiccolo:
+                self._piccolo.setSpectrometerEnabledStatus(enabled=isChecked,
+                    spectrometer=self._spectrometers[index.row()])
             return
+
         try:
             data = float(index.text())
         except:
@@ -90,6 +96,8 @@ class IntegrationTimes(QtGui.QStandardItemModel):
 
             enable_item = QtGui.QStandardItem("true")
             enable_item.setCheckable(True)
+            enable_item.setEditable(False)
+            enable_item.setCheckState(2)
             self.setItem(j,last_col,enable_item)
             
 
@@ -172,6 +180,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # connect spectra load boxes
         self._spectraList = {}
         self._updateSpectraFile = True
+        self._currentFileName = None
         self._spectra = None
         self._selectedDirection = None
         self._selectedSpectrum = None
@@ -179,7 +188,13 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.selectShutter.currentIndexChanged.connect(self.setSpectrumAndDirection)
         self.selectSpectrometer.currentIndexChanged.connect(self.setSpectrumAndDirection)
         self.selectSpectrum.currentIndexChanged.connect(self.setSpectrumAndDirection)
+        self.displayUnits.currentIndexChanged.connect(lambda: self.spectraPlot
+                .setUnits(self.displayUnits.currentText()))
+        self.showLatest.clicked.connect(self.updateRealTime)
 
+
+        # toggle spectra plotting (prevents multiple rapid calls)
+        self._ableToPlot = True
         # hook up scheduler
         self._scheduledJobs = PiccoloSchedule()
         self._scheduledJobsDialog = ScheduleListDialog(scheduledJobs = self._scheduledJobs)
@@ -194,10 +209,22 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.status)
+        self.statusTimer = QtCore.QTimer()
+        self.statusTimer.timeout.connect(self.status)
         # check every 5 seconds
-        self.timer.start(5000)        
+        self.statusTimer.start(5000)        
+        #check telemetry more regularly
+        self.telemTimer = QtCore.QTimer()
+        self.telemTimer.timeout.connect(self.telemetryStatus)
+        # check every second
+        self.telemTimer.start(1000)        
+
+        self.spectrumTimer = QtCore.QTimer()
+        self.spectrumInterval = 5000
+        self.spectrumTimer.timeout.connect(self.updateRealTime)
+        self.spectrumTimer.start(self.spectrumInterval)
+        
+
 
     def syncTime(self):
         now = datetime.datetime.now()
@@ -223,7 +250,17 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         else:
             return str(val)
 
-    def status(self):
+
+
+    def updateSpectrumTimer(self):
+        integrationTime = self._piccolo.piccolo.getTotalIntegrationTime()
+        interval = max(2000, int(float(integrationTime)))
+        print(interval)
+        if interval != self.spectrumInterval:
+            self.spectrumInterval = int(float(interval))
+            self.spectrumTimer.setInterval(int(self.spectrumInterval))
+            
+    def telemetryStatus(self):
         # check if we need to update times
         now = datetime.datetime.now()
         self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -236,13 +273,28 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 self.piccoloTime.setText(ptime.split('.')[0])
 
             #update location labels
-            plocation = self._piccolo.piccolo.getLocation()
-            self.gpsTime.setText(plocation['time'])
-            self.longitudeLabel.setText(self.floatToDDMMSS(plocation['lon']))
-            self.latitudeLabel.setText(self.floatToDDMMSS(plocation['lat']))
-            self.altitudeLabel.setText(self.floatToUnits(plocation['alt'],'m'))
-            self.speedLabel.setText(self.floatToUnits(plocation['speed'],'m/s'))
+            if "GPS" in self._peripherals:
+                self.gpsContainerWidget.setHidden(False)
+                plocation = self._piccolo.piccolo.getAuxRecord(aux_inst="GPS")
+                self.gpsTime.setText(plocation['time'])
+                self.longitudeLabel.setText(self.floatToDDMMSS(plocation['lon']))
+                self.latitudeLabel.setText(self.floatToDDMMSS(plocation['lat']))
+                self.altitudeLabel.setText(self.floatToUnits(plocation['alt'],'m'))
+                self.speedLabel.setText(self.floatToUnits(plocation['speed'],'m/s'))
+            else:
+                self.gpsContainerWidget.setHidden(True)
 
+            #update altimeter label
+            if "Altimeter" in self._peripherals:
+                self.altitudeContainerWidget.setHidden(False)
+                pAltitude = self._piccolo.piccolo.getAuxRecord(aux_inst="Altimeter")
+                self.altimeterLabel.setText(pAltitude+" m")
+            else:
+                self.altitudeContainerWidget.setHidden(True)
+
+
+
+    def status(self):
         # handle status
         state = 'red'
         status = 'disconnected'
@@ -278,7 +330,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                     self._times.updateIntegrationTimeDisplay(spectrometer,shutter)
                 elif msg[0] == 'warning':
                     QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
-                
+            
+            self.updateSpectrumTimer()
+
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
         self.repaint()
@@ -313,19 +367,56 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def stopRecording(self):
         self._piccolo.piccolo.abort()
 
-    def downloadSpectra(self):
+    def downloadLatestSpectrum(self):
         odir = str(self.outputDir.text())
-        if self._piccolo!=None:
+        
+        #TODO: can't get chunking to work with no filename
+        simplify = (self.downloadSimple.isChecked() 
+                or isinstance(self._piccolo,piccolo2.client.PiccoloXbeeClient))
+        self._spectra = self._piccolo.piccolo.getSpectra(outDir=odir,
+                fname='', simplify = simplify)
+
+        #unlike downloadSpectra, we need to find out what file we just got
+        #self._currentFileName = self._spectra[0]['FileName']
+        self._plotDownloadedSpectrum()
+
+    def updateRealTime(self):
+        if self.showLatest.isChecked() and self.tabWidget.currentIndex()==2:
+            self.downloadLatestSpectrum()
+
+    def downloadSpectra(self,spectraName=None):
+        odir = str(self.outputDir.text())
+        if self._piccolo!=None and not spectraName:
             if odir not in self._spectraList:
                 self._spectraList[odir] = []
-            self._spectraList[odir] += self._piccolo.piccolo.getSpectraList(outDir=odir,haveNFiles=len( self._spectraList[odir]))
-        else:
-            return
-        spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
+            need_compressed = isinstance(self._piccolo, piccolo2.client.PiccoloXbeeClient)
+            new_spectra = self._piccolo.piccolo.getSpectraList(outDir=odir,
+                    compressed=need_compressed,haveNFiles=len( self._spectraList[odir]))
+            if need_compressed:
+                new_spectra = PiccoloCompress.decompressFileList(new_spectra)
+            self._spectraList[odir] += new_spectra
+            spectraName = SpectraListDialog.getSpectrum(fileList=self._spectraList[odir])
 
-        if spectraName is None:
+        elif self._piccolo is None:
             return
+
+        if spectraName is None or spectraName == self._currentFileName:
+            #trying to download the same spectrum multiple times in a row
+            #messes with the chunking system
+            return
+
+        self._currentFileName = spectraName
+        
+
         self._spectra = self._piccolo.piccolo.getSpectra(fname=spectraName, simplify = self.downloadSimple.isChecked())
+        print(self._spectra)
+        self._plotDownloadedSpectrum()
+
+    def _plotDownloadedSpectrum(self,spectra = None):
+        if spectra is None:
+            spectra = self._spectra
+
+        self._ableToPlot = False
         self._selectedDirection = self._spectra.directions[0]
         spectra = []
         for s in ['Light','Dark']:
@@ -348,7 +439,13 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.selectSpectrum.clear()
         self.selectSpectrum.addItems(spectra)
 
+        self._ableToPlot = True
+        self.setSpectrumAndDirection()
+
     def setSpectrumAndDirection(self):
+        if not self._ableToPlot:
+            return
+
         self._selectedSpectrum = self.selectSpectrum.currentText()
         self._selectedDirection = self.selectShutter.currentText()
         self._selectedSpectrometer = self.selectSpectrometer.currentText()
@@ -417,6 +514,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # get the current piccolo time
         ptime = self._piccolo.piccolo.getClock()
         self.piccoloTime.setText(ptime.split('.')[0])
+
+
+        #get the piccolo's attached peripherals
+        self._peripherals = self._piccolo.piccolo.getAttachedAuxInstruments()
 
         # get the data dir
         self.updateMounted()
