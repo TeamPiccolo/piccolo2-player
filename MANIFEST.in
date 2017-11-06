@@ -3,4 +3,5 @@ include COPYING
 include ChangeLog
 include pyuic.json
 include requirements.txt
+include piccolo2.yml
 recursive-include piccolo2 *.ui

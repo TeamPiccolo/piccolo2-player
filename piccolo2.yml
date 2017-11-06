@@ -1,0 +1,7 @@
+name: piccolo2
+dependencies:
+ - python=2.7
+ - setuptools_scm
+ - qt=4
+ - matplotlib
+ 
