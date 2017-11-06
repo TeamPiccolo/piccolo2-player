@@ -27,9 +27,17 @@ def main():
     group.add_argument('-u','--piccolo-url',metavar='URL',default='http://localhost:8080',help='set the URL of the piccolo server, default http://localhost:8080')
     group.add_argument('-x','--xbee-address',metavar='ADR',help="the address of the xbee radio")
     parser.add_argument('-d','--debug', action='store_true',default=False,help="enable debugging output")
-
+    parser.add_argument('-v','--version',action='store_true',default=False,help="print version and exit")
+    
     args = parser.parse_args()
 
+    if args.version:
+        from client import __version__
+        print 'client:',__version__
+        print 'player:',player.__version__
+        return
+
+    
     log = logging.getLogger("piccolo")
     if args.debug:
         log.setLevel(logging.DEBUG)
