@@ -32,12 +32,13 @@ cmdclass = {'build_ui': build_ui,
 
 setup(
     name = "piccolo2-player",
-    version = "0.1",
     namespace_packages = ['piccolo2'],
     packages = find_packages(),
+    use_scm_version=True,
     setup_requires = [
-	"pyqt-distutils",
-	],
+        "pyqt-distutils",
+        'setuptools_scm'
+        ],
     install_requires = [
         "piccolo2-client",
     ],

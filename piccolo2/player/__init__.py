@@ -15,4 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with piccolo2-player.  If not, see <http://www.gnu.org/licenses/>.
 
+from pkg_resources import get_distribution, DistributionNotFound
+try:
+    __version__ = get_distribution('piccolo2-player').version
+except DistributionNotFound:
+    # package is not installed
+    pass
+
 from PlayerApp import *
