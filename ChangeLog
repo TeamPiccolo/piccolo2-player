@@ -1,3 +1,7 @@
+2017-11-22 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: add columns to set minimum and maximum
+   integration time per spectrometer
+
 2017-11-06 Magnus Hagdorn
  * piccolo2/pplayer.py: add option to print version
 

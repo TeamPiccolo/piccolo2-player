@@ -51,23 +51,35 @@ class IntegrationTimes(QtGui.QStandardItemModel):
             return
         index.setForeground(QtGui.QBrush(QtGui.QColor('black')))
         if self._updatePiccolo:
-            self._piccolo.setIntegrationTime(shutter=self._shutters[index.column()],
-                                             spectrometer=self._spectrometers[index.row()],
-                                             milliseconds=data)
+            shutter = self._shutters[index.column()]
+            spectrometer = self._spectrometers[index.row()]
+            if shutter == 'min':
+                self._piccolo.setMinIntegrationTime(spectrometer=spectrometer,milliseconds=data)
+            elif shutter == 'max':
+                self._piccolo.setMaxIntegrationTime(spectrometer=spectrometer,milliseconds=data)
+            else:
+                self._piccolo.setIntegrationTime(shutter=shutter,
+                                                 spectrometer=spectrometer,
+                                                 milliseconds=data)
 
 
     def updateIntegrationTimeDisplay(self,spectrometer,shutter):
         j = self._spectrometers.index(spectrometer)
         i = self._shutters.index(shutter)
-        data = self._piccolo.getIntegrationTime(shutter=shutter,
-                                                spectrometer=spectrometer)
+        if shutter == 'min':
+            data = self._piccolo.getMinIntegrationTime(spectrometer=spectrometer)
+        elif shutter == 'max':
+            data = self._piccolo.getMaxIntegrationTime(spectrometer=spectrometer)
+        else:
+            data = self._piccolo.getIntegrationTime(shutter=shutter,
+                                                    spectrometer=spectrometer)
         self._updatePiccolo = False
         self.setItem(j,i,QtGui.QStandardItem(str(data)))
         self._updatePiccolo = True
             
     def piccoloConnect(self,piccolo):
         self._piccolo = piccolo
-        self._shutters = self._piccolo.getShutterList()
+        self._shutters = ['min']+self._piccolo.getShutterList()+['max']
         self._spectrometers = self._piccolo.getSpectrometerList()
 
         self.setRowCount(len(self._spectrometers))
@@ -224,6 +236,12 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 if msg[0] == 'IT':
                     spectrometer,shutter = msg[1:]
                     self._times.updateIntegrationTimeDisplay(spectrometer,shutter)
+                elif msg[0] == 'ITmin':
+                    spectrometer = msg[1]
+                    self._times.updateIntegrationTimeDisplay(spectrometer,'min')
+                elif msg[0] == 'ITmax':
+                    spectrometer = msg[1]
+                    self._times.updateIntegrationTimeDisplay(spectrometer,'max')
                 elif msg[0] == 'warning':
                     QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
                 
