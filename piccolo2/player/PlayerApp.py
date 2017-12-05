@@ -179,6 +179,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.action_Add_Schedule.triggered.connect(self.addSchedule)
         self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
 
+        # hook up autointegration checkbox
+        self.checkAutoIntegrate.stateChanged.connect(self.handleAutointegrate)
+        self.autoIntegrateRepeat.setEnabled(False)
+        
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
@@ -257,7 +261,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         kwds['delay'] = self.delayMeasurements.value()
         kwds['nCycles'] = n
         kwds['outDir'] = str(self.outputDir.text())
-        kwds['auto'] = self.checkAutoIntegrate.checkState()==2
+        if self.checkAutoIntegrate.checkState()==2:
+            kwds['auto'] = self.autoIntegrateRepeat.value()
+        else:
+            kwds['auto'] = -1
         kwds['timeout'] = self.autoIntegrateTimeout.value()
         if start not in [None, False]:
             kwds['at_time'] = start
@@ -273,6 +280,12 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def autoIntegrate(self):
         self._piccolo.piccolo.setIntegrationTimeAuto()
 
+    def handleAutointegrate(self):
+        if self.checkAutoIntegrate.checkState() == 2:
+            self.autoIntegrateRepeat.setEnabled(True)
+        else:
+            self.autoIntegrateRepeat.setEnabled(False)
+        
     def pauseRecording(self):
         self._piccolo.piccolo.pause()
 

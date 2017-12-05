@@ -1,3 +1,8 @@
+2017-12-05 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: autointegration can happen a number of times
+ * piccolo2/player/player.ui: add spin box to select how often autointegration
+   happens
+
 2017-11-22 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: add columns to set minimum and maximum
    integration time per spectrometer
