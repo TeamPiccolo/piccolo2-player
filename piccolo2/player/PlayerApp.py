@@ -24,6 +24,7 @@ import player_ui
 import connect_ui
 from ScheduleList import *
 from Schedule import ScheduleDialog
+from QuietTime import QuietTimeDialog
 from SpectraList import SpectraListDialog
 import datetime
 
@@ -178,6 +179,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.action_Quit.triggered.connect(QtGui.qApp.quit)
         self.action_Add_Schedule.triggered.connect(self.addSchedule)
         self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
+        self.actionQuietTime.triggered.connect(self.quietTimeDialog)
 
         # hook up autointegration checkbox
         self.checkAutoIntegrate.stateChanged.connect(self.handleAutointegrate)
@@ -386,10 +388,16 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
     def addSchedule(self):
         start,interval,end = ScheduleDialog.getSchedule()
-        print start,interval,end
         if start!=None:
             self.startRecording(start=start,end=end,interval=interval)
 
+    def quietTimeDialog(self):
+        # get current settings
+        se = self._piccolo.getQuietTime()
+        se = QuietTimeDialog.getQuietTime(start_time=se[0],end_time=se[1])
+        if se is not None:
+            self._piccolo.setQuietTime(start_time=se[0],end_time=se[1])
+        
     def savePlot(self):
         fname = QtGui.QFileDialog.getSaveFileName(self,'Save Spectra Plot',
                                                   "spectra.png",

@@ -1,3 +1,10 @@
+2017-12-11 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: hook up quiet time dialog
+ * piccolo2/player/Schedule.py: disable spinboxes when repeat is disabled
+ * piccolo2/player/player.ui: add new menu item
+ * piccolo2/player/QuietTime.py: new dialog to support quiet time
+ * piccolo2/player/quiettime.ui: UI for new dialog
+
 2017-12-05 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: autointegration can happen a number of times
  * piccolo2/player/player.ui: add spin box to select how often autointegration

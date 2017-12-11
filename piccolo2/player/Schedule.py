@@ -30,7 +30,18 @@ class ScheduleDialog(QtGui.QDialog,schedule_ui.Ui_ScheduleDialog):
 
         self.startTimeEdit.setMinimumDateTime(now)
         self.endTimeEdit.setMinimumDateTime(now)
+        self.endTimeEdit.setEnabled(False)
+        self.intervalEdit.setEnabled(False)
+        self.repeatSchedule.stateChanged.connect(self.handleRepeat)
 
+    def handleRepeat(self):
+        if self.repeatSchedule.checkState()==2:
+            self.endTimeEdit.setEnabled(True)
+            self.intervalEdit.setEnabled(True)
+        else:
+            self.endTimeEdit.setEnabled(False)
+            self.intervalEdit.setEnabled(False)
+        
     @property
     def start(self):
         return self.startTimeEdit.dateTime().toPyDateTime().isoformat()

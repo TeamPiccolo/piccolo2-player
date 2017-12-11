@@ -496,7 +496,7 @@
      <x>0</x>
      <y>0</y>
      <width>780</width>
-     <height>29</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -514,6 +514,7 @@
     </property>
     <addaction name="action_Add_Schedule"/>
     <addaction name="actionList_Schedules"/>
+    <addaction name="actionQuietTime"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Schedule"/>
@@ -560,6 +561,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionQuietTime">
+   <property name="text">
+    <string>Quiet&amp;Time</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
  </widget>
