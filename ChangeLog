@@ -1,3 +1,10 @@
+2017-12-12 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: set run name to the latest one used; hook up
+   Runs button
+ * piccolo2/player/player.ui: add button to select run
+ * piccolo2/player/RunList.py: new dialog for selecting run
+ * piccolo2/player/runlist.ui: UI for new dialog
+
 2017-12-11 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: hook up quiet time dialog
  * piccolo2/player/Schedule.py: disable spinboxes when repeat is disabled

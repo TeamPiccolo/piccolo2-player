@@ -25,6 +25,7 @@ import connect_ui
 from ScheduleList import *
 from Schedule import ScheduleDialog
 from QuietTime import QuietTimeDialog
+from RunList import RunListDialog
 from SpectraList import SpectraListDialog
 import datetime
 
@@ -159,6 +160,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.darkButton.clicked.connect(self.recordDark)
         self.pauseRecordingButton.clicked.connect(self.pauseRecording)
 
+        self.selectRunButton.clicked.connect(self.setRun)
+        
         # connect spectra load boxes
         self._spectraList = {}
         self._updateSpectraFile = True
@@ -191,7 +194,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.status)
         # check every second
-        self.timer.start(1000)        
+        self.timer.start(1000)
 
     def syncTime(self):
         now = datetime.datetime.now()
@@ -291,6 +294,12 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def pauseRecording(self):
         self._piccolo.piccolo.pause()
 
+    def setRun(self):
+        runList = self._piccolo.piccolo.getRunList()
+        r = RunListDialog.getRun(runList=runList)
+        if r is not None:
+            self.outputDir.setText(r)
+        
     def stopRecording(self):
         self._piccolo.piccolo.abort()
 
@@ -368,6 +377,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # hook up scheduler
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
+        self.outputDir.setText(self._piccolo.piccolo.getCurrentRun())
+        
     def updateMounted(self):
         info = self._piccolo.piccolo.info()
         self.dataDir.setText(info['datadir'])
