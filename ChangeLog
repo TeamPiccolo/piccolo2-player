@@ -1,4 +1,8 @@
 2017-12-12 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: update output Directory when notified it
+   changed by the server
+
+2017-12-12 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: set run name to the latest one used; hook up
    Runs button
  * piccolo2/player/player.ui: add button to select run

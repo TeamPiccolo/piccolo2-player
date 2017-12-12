@@ -251,6 +251,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 elif msg[0] == 'ITmax':
                     spectrometer = msg[1]
                     self._times.updateIntegrationTimeDisplay(spectrometer,'max')
+                elif msg[0] == 'CR':
+                    cr = str(self.outputDir.text())
+                    if cr != msg[1]:
+                        self.outputDir.setText(msg[1])
                 elif msg[0] == 'warning':
                     QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
                 
