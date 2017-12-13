@@ -1,3 +1,6 @@
+2017-12-13 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: handle extended status
+
 2017-12-12 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: update output Directory when notified it
    changed by the server

@@ -18,6 +18,7 @@
 __all__ = ['main']
 
 import piccolo2.client
+from piccolo2.PiccoloStatus import PiccoloExtendedStatus
 
 from PyQt4 import QtGui, QtCore
 import player_ui
@@ -146,6 +147,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self._connectionType = 'http'
         self._connectionData = 'http://localhost:8080'
 
+        # the extended status
+        self._extendedStatus = None
+        
         # status buttons
         self.syncTimeButton.clicked.connect(self.syncTime)
 
@@ -217,10 +221,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         status = 'disconnected'
         if self._piccolo != None:
             try:
-                pstatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
+                pstatus,estatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
             except:
                 pstatus = piccolo2.PiccoloStatus.PiccoloStatus()
                 pstatus.connected = False
+                estatus = None
             if pstatus.connected:
                 status = 'connected'
                 state = 'green'
@@ -257,6 +262,18 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                         self.outputDir.setText(msg[1])
                 elif msg[0] == 'warning':
                     QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
+            if estatus is not None and self._extendedStatus is not None:
+                self._extendedStatus.update(estatus)
+                if self._extendedStatus.isAutointegrating():
+                    status += ' autointegrating'
+                if self._extendedStatus.isRecording():
+                    status += ' recording'
+                    for s in self._extendedStatus.shutters:
+                        status += ' %s '%s
+                        if self._extendedStatus.isOpen(s):
+                            status += '0'
+                        else:
+                            status += ' '
                 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
@@ -382,6 +399,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
         self.outputDir.setText(self._piccolo.piccolo.getCurrentRun())
+
+        # initialise the extended status
+        self._extendedStatus = PiccoloExtendedStatus(self._piccolo.piccolo.getSpectrometerList(),self._piccolo.piccolo.getShutterList())
         
     def updateMounted(self):
         info = self._piccolo.piccolo.info()
