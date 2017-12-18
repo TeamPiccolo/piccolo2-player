@@ -1,3 +1,7 @@
+2017-12-18 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: get integration time source and colour cell
+   accordingly
+
 2017-12-13 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: handle extended status
 

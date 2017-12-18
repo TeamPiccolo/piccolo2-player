@@ -52,7 +52,6 @@ class IntegrationTimes(QtGui.QStandardItemModel):
         except:
             index.setForeground(QtGui.QBrush(QtGui.QColor('red')))
             return
-        index.setForeground(QtGui.QBrush(QtGui.QColor('black')))
         if self._updatePiccolo:
             shutter = self._shutters[index.column()]
             spectrometer = self._spectrometers[index.row()]
@@ -69,15 +68,25 @@ class IntegrationTimes(QtGui.QStandardItemModel):
     def updateIntegrationTimeDisplay(self,spectrometer,shutter):
         j = self._spectrometers.index(spectrometer)
         i = self._shutters.index(shutter)
+        source = 0
         if shutter == 'min':
             data = self._piccolo.getMinIntegrationTime(spectrometer=spectrometer)
         elif shutter == 'max':
             data = self._piccolo.getMaxIntegrationTime(spectrometer=spectrometer)
         else:
-            data = self._piccolo.getIntegrationTime(shutter=shutter,
-                                                    spectrometer=spectrometer)
+            data   = self._piccolo.getIntegrationTime(shutter=shutter,
+                                                      spectrometer=spectrometer)
+            source = self._piccolo.getIntegrationTimeSource(shutter=shutter,
+                                                            spectrometer=spectrometer)
         self._updatePiccolo = False
-        self.setItem(j,i,QtGui.QStandardItem(str(data)))
+        item = QtGui.QStandardItem(str(data))
+        if source == 0:
+            item.setForeground(QtGui.QBrush(QtGui.QColor('black')))
+        elif source == 1:
+            item.setForeground(QtGui.QBrush(QtGui.QColor('green')))
+        elif source == 2:
+            item.setForeground(QtGui.QBrush(QtGui.QColor('blue')))
+        self.setItem(j,i,item)
         self._updatePiccolo = True
             
     def piccoloConnect(self,piccolo):
