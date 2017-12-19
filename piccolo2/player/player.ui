@@ -213,7 +213,7 @@
           <item>
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Output</string>
+             <string>Current Run</string>
             </property>
            </widget>
           </item>
@@ -227,6 +227,13 @@
             </property>
             <property name="text">
              <string>spectra</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="selectRunButton">
+            <property name="text">
+             <string>Runs</string>
             </property>
            </widget>
           </item>
@@ -302,6 +309,9 @@
              <string>autoIntegrate</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="autoIntegrateRepeat"/>
           </item>
           <item>
            <spacer name="horizontalSpacer_7">
@@ -493,7 +503,7 @@
      <x>0</x>
      <y>0</y>
      <width>780</width>
-     <height>27</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -511,6 +521,7 @@
     </property>
     <addaction name="action_Add_Schedule"/>
     <addaction name="actionList_Schedules"/>
+    <addaction name="actionQuietTime"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Schedule"/>
@@ -557,6 +568,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionQuietTime">
+   <property name="text">
+    <string>Quiet&amp;Time</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
  </widget>

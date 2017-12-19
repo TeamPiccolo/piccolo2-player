@@ -18,12 +18,15 @@
 __all__ = ['main']
 
 import piccolo2.client
+from piccolo2.PiccoloStatus import PiccoloExtendedStatus
 
 from PyQt4 import QtGui, QtCore
 import player_ui
 import connect_ui
 from ScheduleList import *
 from Schedule import ScheduleDialog
+from QuietTime import QuietTimeDialog
+from RunList import RunListDialog
 from SpectraList import SpectraListDialog
 import datetime
 
@@ -49,25 +52,46 @@ class IntegrationTimes(QtGui.QStandardItemModel):
         except:
             index.setForeground(QtGui.QBrush(QtGui.QColor('red')))
             return
-        index.setForeground(QtGui.QBrush(QtGui.QColor('black')))
         if self._updatePiccolo:
-            self._piccolo.setIntegrationTime(shutter=self._shutters[index.column()],
-                                             spectrometer=self._spectrometers[index.row()],
-                                             milliseconds=data)
+            shutter = self._shutters[index.column()]
+            spectrometer = self._spectrometers[index.row()]
+            if shutter == 'min':
+                self._piccolo.setMinIntegrationTime(spectrometer=spectrometer,milliseconds=data)
+            elif shutter == 'max':
+                self._piccolo.setMaxIntegrationTime(spectrometer=spectrometer,milliseconds=data)
+            else:
+                self._piccolo.setIntegrationTime(shutter=shutter,
+                                                 spectrometer=spectrometer,
+                                                 milliseconds=data)
 
 
     def updateIntegrationTimeDisplay(self,spectrometer,shutter):
         j = self._spectrometers.index(spectrometer)
         i = self._shutters.index(shutter)
-        data = self._piccolo.getIntegrationTime(shutter=shutter,
-                                                spectrometer=spectrometer)
+        source = 0
+        if shutter == 'min':
+            data = self._piccolo.getMinIntegrationTime(spectrometer=spectrometer)
+        elif shutter == 'max':
+            data = self._piccolo.getMaxIntegrationTime(spectrometer=spectrometer)
+        else:
+            data   = self._piccolo.getIntegrationTime(shutter=shutter,
+                                                      spectrometer=spectrometer)
+            source = self._piccolo.getIntegrationTimeSource(shutter=shutter,
+                                                            spectrometer=spectrometer)
         self._updatePiccolo = False
-        self.setItem(j,i,QtGui.QStandardItem(str(data)))
+        item = QtGui.QStandardItem(str(data))
+        if source == 0:
+            item.setForeground(QtGui.QBrush(QtGui.QColor('black')))
+        elif source == 1:
+            item.setForeground(QtGui.QBrush(QtGui.QColor('green')))
+        elif source == 2:
+            item.setForeground(QtGui.QBrush(QtGui.QColor('blue')))
+        self.setItem(j,i,item)
         self._updatePiccolo = True
             
     def piccoloConnect(self,piccolo):
         self._piccolo = piccolo
-        self._shutters = self._piccolo.getShutterList()
+        self._shutters = ['min']+self._piccolo.getShutterList()+['max']
         self._spectrometers = self._piccolo.getSpectrometerList()
 
         self.setRowCount(len(self._spectrometers))
@@ -132,6 +156,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self._connectionType = 'http'
         self._connectionData = 'http://localhost:8080'
 
+        # the extended status
+        self._extendedStatus = None
+        
         # status buttons
         self.syncTimeButton.clicked.connect(self.syncTime)
 
@@ -146,6 +173,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.darkButton.clicked.connect(self.recordDark)
         self.pauseRecordingButton.clicked.connect(self.pauseRecording)
 
+        self.selectRunButton.clicked.connect(self.setRun)
+        
         # connect spectra load boxes
         self._spectraList = {}
         self._updateSpectraFile = True
@@ -166,14 +195,19 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.action_Quit.triggered.connect(QtGui.qApp.quit)
         self.action_Add_Schedule.triggered.connect(self.addSchedule)
         self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
+        self.actionQuietTime.triggered.connect(self.quietTimeDialog)
 
+        # hook up autointegration checkbox
+        self.checkAutoIntegrate.stateChanged.connect(self.handleAutointegrate)
+        self.autoIntegrateRepeat.setEnabled(False)
+        
         # periodically check status
         self.statusLabel = QtGui.QLabel()
         self.statusbar.addWidget(self.statusLabel)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.status)
         # check every second
-        self.timer.start(1000)        
+        self.timer.start(1000)
 
     def syncTime(self):
         now = datetime.datetime.now()
@@ -196,10 +230,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         status = 'disconnected'
         if self._piccolo != None:
             try:
-                pstatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
+                pstatus,estatus = self._piccolo.piccolo.status(listener=self._piccolo.listenerID)
             except:
                 pstatus = piccolo2.PiccoloStatus.PiccoloStatus()
                 pstatus.connected = False
+                estatus = None
             if pstatus.connected:
                 status = 'connected'
                 state = 'green'
@@ -224,8 +259,30 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 if msg[0] == 'IT':
                     spectrometer,shutter = msg[1:]
                     self._times.updateIntegrationTimeDisplay(spectrometer,shutter)
+                elif msg[0] == 'ITmin':
+                    spectrometer = msg[1]
+                    self._times.updateIntegrationTimeDisplay(spectrometer,'min')
+                elif msg[0] == 'ITmax':
+                    spectrometer = msg[1]
+                    self._times.updateIntegrationTimeDisplay(spectrometer,'max')
+                elif msg[0] == 'CR':
+                    cr = str(self.outputDir.text())
+                    if cr != msg[1]:
+                        self.outputDir.setText(msg[1])
                 elif msg[0] == 'warning':
                     QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
+            if estatus is not None and self._extendedStatus is not None:
+                self._extendedStatus.update(estatus)
+                if self._extendedStatus.isAutointegrating():
+                    status += ' autointegrating'
+                if self._extendedStatus.isRecording():
+                    status += ' recording'
+                    for s in self._extendedStatus.shutters:
+                        status += ' %s '%s
+                        if self._extendedStatus.isOpen(s):
+                            status += '0'
+                        else:
+                            status += ' '
                 
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
@@ -239,7 +296,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         kwds['delay'] = self.delayMeasurements.value()
         kwds['nCycles'] = n
         kwds['outDir'] = str(self.outputDir.text())
-        kwds['auto'] = self.checkAutoIntegrate.checkState()==2
+        if self.checkAutoIntegrate.checkState()==2:
+            kwds['auto'] = self.autoIntegrateRepeat.value()
+        else:
+            kwds['auto'] = -1
         kwds['timeout'] = self.autoIntegrateTimeout.value()
         if start not in [None, False]:
             kwds['at_time'] = start
@@ -255,9 +315,21 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def autoIntegrate(self):
         self._piccolo.piccolo.setIntegrationTimeAuto()
 
+    def handleAutointegrate(self):
+        if self.checkAutoIntegrate.checkState() == 2:
+            self.autoIntegrateRepeat.setEnabled(True)
+        else:
+            self.autoIntegrateRepeat.setEnabled(False)
+        
     def pauseRecording(self):
         self._piccolo.piccolo.pause()
 
+    def setRun(self):
+        runList = self._piccolo.piccolo.getRunList()
+        r = RunListDialog.getRun(runList=runList)
+        if r is not None:
+            self.outputDir.setText(r)
+        
     def stopRecording(self):
         self._piccolo.piccolo.abort()
 
@@ -335,6 +407,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # hook up scheduler
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
+        self.outputDir.setText(self._piccolo.piccolo.getCurrentRun())
+
+        # initialise the extended status
+        self._extendedStatus = PiccoloExtendedStatus(self._piccolo.piccolo.getSpectrometerList(),self._piccolo.piccolo.getShutterList())
+        
     def updateMounted(self):
         info = self._piccolo.piccolo.info()
         self.dataDir.setText(info['datadir'])
@@ -355,10 +432,16 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
     def addSchedule(self):
         start,interval,end = ScheduleDialog.getSchedule()
-        print start,interval,end
         if start!=None:
             self.startRecording(start=start,end=end,interval=interval)
 
+    def quietTimeDialog(self):
+        # get current settings
+        se = self._piccolo.getQuietTime()
+        se = QuietTimeDialog.getQuietTime(start_time=se[0],end_time=se[1])
+        if se is not None:
+            self._piccolo.setQuietTime(start_time=se[0],end_time=se[1])
+        
     def savePlot(self):
         fname = QtGui.QFileDialog.getSaveFileName(self,'Save Spectra Plot',
                                                   "spectra.png",
