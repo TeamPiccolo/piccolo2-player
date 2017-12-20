@@ -47,7 +47,7 @@ class SpectraListDialog(QtGui.QDialog,spectralist_ui.Ui_SpectraListDialog):
         else:
             fl = []
             for f in self._fileList:
-                if f.endswith('.'+ftype):
+                if f.endswith(ftype+'.pico'):
                     fl.append(f)
         self.listWidget.addItems(fl)
         self.listWidget.setCurrentRow(len(fl)-1)

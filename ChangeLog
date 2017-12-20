@@ -1,3 +1,6 @@
+2017-12-20 Magnus Hagdorn
+ * piccolo2/player/SpectraList.py: sort out new file pattern
+
 2017-12-18 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: get integration time source and colour cell
    accordingly
