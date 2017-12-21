@@ -1,3 +1,7 @@
+2017-12-21 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: display version strings
+ * piccolo2/player/player.ui: add place to display versions
+
 2017-12-20 Magnus Hagdorn
  * piccolo2/player/SpectraList.py: sort out new file pattern
 

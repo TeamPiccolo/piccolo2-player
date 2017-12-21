@@ -19,6 +19,7 @@ __all__ = ['main']
 
 import piccolo2.client
 from piccolo2.PiccoloStatus import PiccoloExtendedStatus
+from piccolo2.player import __version__ as version
 
 from PyQt4 import QtGui, QtCore
 import player_ui
@@ -158,6 +159,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
 
         # the extended status
         self._extendedStatus = None
+
+        # version numbers
+        self.clientVersion.setText(piccolo2.client.__version__)
+        self.playerVersion.setText(version)
         
         # status buttons
         self.syncTimeButton.clicked.connect(self.syncTime)
@@ -401,6 +406,9 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # get the data dir
         self.updateMounted()
 
+        # get the server version
+        self.serverVersion.setText(self._piccolo.getVersion())
+        
         # hook up integration times
         self._times.piccoloConnect(self._piccolo.piccolo)
 
