@@ -1,4 +1,7 @@
 2018-04-11 Magnus Hagdorn
+ * piccolo2/player/player.ui: rename text label
+
+2018-04-11 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: set record parameters when setting up a
    schedule
 
