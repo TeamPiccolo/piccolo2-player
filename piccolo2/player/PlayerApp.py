@@ -305,7 +305,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                     spectrometer = msg[1]
                     self._times.updateIntegrationTimeDisplay(spectrometer,'max')
                 elif msg[0] == 'CR':
-                    cr = str(self.outputDir.text())
+                    cr = str(msg[1])
                     self.currentRun = cr
                     self.changeCurrentRun(cr)
                 elif msg[0] == 'AI':
@@ -349,16 +349,14 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         #if n==0:
         #    n='Inf'
         kwds ={}
-        #kwds['delay'] = self.delayMeasurements.value()
-        #kwds['nCycles'] = n
-        #kwds['outDir'] = str(self.outputDir.text())
-        #if self.checkAutoIntegrate.checkState()==2:
-        #    kwds['auto'] = self.autoIntegrateRepeat.value()
-        #else:
-        #    kwds['auto'] = -1
         kwds['timeout'] = self.autoIntegrateTimeout.value()
         if start not in [None, False]:
             kwds['at_time'] = start
+            # get parameters from current state
+            kwds['delay'] = self.delay
+            kwds['nCycles'] = self.nCycles
+            kwds['auto'] = self.auto
+            kwds['currentRun'] = self.currentRun
         if interval!=None:
             kwds['interval'] = interval
         if end!=None:

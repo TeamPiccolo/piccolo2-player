@@ -1,4 +1,8 @@
 2018-04-11 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: set record parameters when setting up a
+   schedule
+
+2018-04-11 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: set current run directly
 
 2018-04-10 Magnus Hagdorn
