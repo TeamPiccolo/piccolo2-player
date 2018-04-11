@@ -213,6 +213,10 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # hook up delay between measurements
         self.delayMeasurements.valueChanged.connect(self.changeDelay)
         self.delay = None
+
+        # hook up current run
+        self.outputDir.textEdited.connect(self.changeCurrentRun)
+        self.currentRun = None
         
         # periodically check status
         self.statusLabel = QtGui.QLabel()
@@ -234,6 +238,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.repeatMeasurements.setEnabled(False)
         self.delayMeasurements.setEnabled(False)
         self.autoIntegrateTimeout.setEnabled(False)
+        self.outputDir.setEnabled(False)
 
     def enableEdit(self):
         self.integrationTimeView.setEditTriggers(QtGui.QAbstractItemView.AllEditTriggers)
@@ -245,6 +250,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.repeatMeasurements.setEnabled(True)
         self.delayMeasurements.setEnabled(True)
         self.autoIntegrateTimeout.setEnabled(True)
+        self.outputDir.setEnabled(True)
         
     def status(self):
         # check if we need to update times
@@ -300,8 +306,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                     self._times.updateIntegrationTimeDisplay(spectrometer,'max')
                 elif msg[0] == 'CR':
                     cr = str(self.outputDir.text())
-                    if cr != msg[1]:
-                        self.outputDir.setText(msg[1])
+                    self.currentRun = cr
+                    self.changeCurrentRun(cr)
                 elif msg[0] == 'AI':
                     n = int(msg[1])
                     self.auto = n
@@ -345,7 +351,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         kwds ={}
         #kwds['delay'] = self.delayMeasurements.value()
         #kwds['nCycles'] = n
-        kwds['outDir'] = str(self.outputDir.text())
+        #kwds['outDir'] = str(self.outputDir.text())
         #if self.checkAutoIntegrate.checkState()==2:
         #    kwds['auto'] = self.autoIntegrateRepeat.value()
         #else:
@@ -403,6 +409,24 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                 self.auto = auto
                 self._piccolo.piccolo.setAuto(auto=auto)
 
+    def changeCurrentRun(self,cr):
+        value = str(self.outputDir.text())
+        cr = str(cr)
+
+        # check if GUI agrees with new value
+        if value != cr:
+            # update GUI
+            self.outputDir.setText(cr)
+
+        if self.currentRun is None:
+            # not set yet
+            self.currentRun = cr
+        else:
+            # check if new value is different from piccolo value
+            if self.currentRun != cr:
+                self.currentRun = cr
+                self._piccolo.piccolo.setCurrentRun(cr=cr)
+                
     def changeNCycles(self,ncycles):
         # get the GUI state
         value = self.repeatMeasurements.value()
