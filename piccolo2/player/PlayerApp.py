@@ -46,7 +46,6 @@ class IntegrationTimes(QtGui.QStandardItemModel):
 
         self.itemChanged.connect(self.updateIntegrationTime)
 
-
     def updateIntegrationTime(self,index):
         try:
             data = float(index.text())
@@ -202,9 +201,22 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.actionList_Schedules.triggered.connect(self.scheduledJobsDialog)
         self.actionQuietTime.triggered.connect(self.quietTimeDialog)
 
-        # hook up autointegration checkbox
-        self.checkAutoIntegrate.stateChanged.connect(self.handleAutointegrate)
-        self.autoIntegrateRepeat.setEnabled(False)
+        # hook up autointegration
+        self.checkAutoIntegrate.stateChanged.connect(self.handleCheckAutointegrate)
+        self.autoIntegrateRepeat.valueChanged.connect(self.handleAutoIntegrate)
+        self.auto = None
+
+        # hook up number of measurements per run
+        self.repeatMeasurements.valueChanged.connect(self.changeNCycles)
+        self.nCycles = None
+
+        # hook up delay between measurements
+        self.delayMeasurements.valueChanged.connect(self.changeDelay)
+        self.delay = None
+
+        # hook up current run
+        self.outputDir.textEdited.connect(self.changeCurrentRun)
+        self.currentRun = None
         
         # periodically check status
         self.statusLabel = QtGui.QLabel()
@@ -218,6 +230,28 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         now = datetime.datetime.now()
         self._piccolo.piccolo.setClock(clock=now.strftime("%Y-%m-%dT%H:%M:%S"))
 
+    def disableEdit(self):
+        self.integrationTimeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        # current run
+        self.checkAutoIntegrate.setEnabled(False)
+        self.autoIntegrateRepeat.setEnabled(False)
+        self.repeatMeasurements.setEnabled(False)
+        self.delayMeasurements.setEnabled(False)
+        self.autoIntegrateTimeout.setEnabled(False)
+        self.outputDir.setEnabled(False)
+
+    def enableEdit(self):
+        self.integrationTimeView.setEditTriggers(QtGui.QAbstractItemView.AllEditTriggers)
+        self.checkAutoIntegrate.setEnabled(True)
+        if self.checkAutoIntegrate.checkState() == 2:
+            self.autoIntegrateRepeat.setEnabled(True)
+        else:
+            self.autoIntegrateRepeat.setEnabled(False)
+        self.repeatMeasurements.setEnabled(True)
+        self.delayMeasurements.setEnabled(True)
+        self.autoIntegrateTimeout.setEnabled(True)
+        self.outputDir.setEnabled(True)
+        
     def status(self):
         # check if we need to update times
         now = datetime.datetime.now()
@@ -271,9 +305,21 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                     spectrometer = msg[1]
                     self._times.updateIntegrationTimeDisplay(spectrometer,'max')
                 elif msg[0] == 'CR':
-                    cr = str(self.outputDir.text())
-                    if cr != msg[1]:
-                        self.outputDir.setText(msg[1])
+                    cr = str(msg[1])
+                    self.currentRun = cr
+                    self.changeCurrentRun(cr)
+                elif msg[0] == 'AI':
+                    n = int(msg[1])
+                    self.auto = n
+                    self.changeAutoIntegrationRepeats(n)
+                elif msg[0] == 'NC':
+                    n = int(msg[1])
+                    self.nCycles = n
+                    self.changeNCycles(n)
+                elif msg[0] == 'D':
+                    d = float(msg[1])
+                    self.delay = d
+                    self.changeDelay(d)
                 elif msg[0] == 'warning':
                     QtGui.QMessageBox.warning(self,'Warning',msg[1],QtGui.QMessageBox.Ok)
             if estatus is not None and self._extendedStatus is not None:
@@ -288,26 +334,29 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
                             status += '0'
                         else:
                             status += ' '
-                
+
+        if state=="green":
+            self.enableEdit()
+        else:
+            self.disableEdit()
+                            
         self.statusLabel.setText(status)
         self.statusLabel.setStyleSheet(' QLabel {color: %s}'%state)
         self.repaint()
 
     def startRecording(self,start=None,end=None,interval=None):
-        n = self.repeatMeasurements.value()
-        if n==0:
-            n='Inf'
+        #n = self.repeatMeasurements.value()
+        #if n==0:
+        #    n='Inf'
         kwds ={}
-        kwds['delay'] = self.delayMeasurements.value()
-        kwds['nCycles'] = n
-        kwds['outDir'] = str(self.outputDir.text())
-        if self.checkAutoIntegrate.checkState()==2:
-            kwds['auto'] = self.autoIntegrateRepeat.value()
-        else:
-            kwds['auto'] = -1
         kwds['timeout'] = self.autoIntegrateTimeout.value()
         if start not in [None, False]:
             kwds['at_time'] = start
+            # get parameters from current state
+            kwds['delay'] = self.delay
+            kwds['nCycles'] = self.nCycles
+            kwds['auto'] = self.auto
+            kwds['currentRun'] = self.currentRun
         if interval!=None:
             kwds['interval'] = interval
         if end!=None:
@@ -320,12 +369,98 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
     def autoIntegrate(self):
         self._piccolo.piccolo.setIntegrationTimeAuto()
 
-    def handleAutointegrate(self):
+    def handleCheckAutointegrate(self):
         if self.checkAutoIntegrate.checkState() == 2:
+            self.changeAutoIntegrationRepeats(0)
             self.autoIntegrateRepeat.setEnabled(True)
         else:
+            self.changeAutoIntegrationRepeats(-1)
             self.autoIntegrateRepeat.setEnabled(False)
-        
+
+    def handleAutoIntegrate(self,value):
+        self.changeAutoIntegrationRepeats(value)
+
+    def changeAutoIntegrationRepeats(self,auto):
+        # get the GUI state
+        enabled = self.checkAutoIntegrate.checkState()==2
+        if enabled:
+            value = self.autoIntegrateRepeat.value()
+        else:
+            value = -1
+
+        # check if GUI agrees with new value
+        if value != auto:
+            # update GUI
+            if auto <0:
+                self.checkAutoIntegrate.setCheckState(0)
+                self.autoIntegrateRepeat.setValue(-1)
+            else:
+                self.checkAutoIntegrate.setCheckState(2)
+                self.autoIntegrateRepeat.setValue(auto)
+
+        if self.auto is None:
+            # not set yet
+            self.auto = auto
+        else:
+            # check if new value is different from piccolo value
+            if self.auto != auto:
+                self.auto = auto
+                self._piccolo.piccolo.setAuto(auto=auto)
+
+    def changeCurrentRun(self,cr):
+        value = str(self.outputDir.text())
+        cr = str(cr)
+
+        # check if GUI agrees with new value
+        if value != cr:
+            # update GUI
+            self.outputDir.setText(cr)
+
+        if self.currentRun is None:
+            # not set yet
+            self.currentRun = cr
+        else:
+            # check if new value is different from piccolo value
+            if self.currentRun != cr:
+                self.currentRun = cr
+                self._piccolo.piccolo.setCurrentRun(cr=cr)
+                
+    def changeNCycles(self,ncycles):
+        # get the GUI state
+        value = self.repeatMeasurements.value()
+
+        # check if GUI agrees with new value
+        if value != ncycles:
+            # update GUI
+            self.repeatMeasurements.setValue(ncycles)
+
+        if self.nCycles is None:
+            # not set yet
+            self.nCycles = ncycles
+        else:
+            # check if new value is different from piccolo value
+            if self.nCycles != ncycles:
+                self.nCycles = ncycles
+                self._piccolo.piccolo.setNCycles(ncycles=ncycles)
+
+    def changeDelay(self,delay):
+        # get the GUI state
+        value = self.delayMeasurements.value()
+
+        # check if GUI agrees with new value
+        if abs(value-delay)>1e-6:
+            # update GUI
+            self.delayMeasurements.setValue(delay)
+
+        if self.delay is None:
+            # not set yet
+            self.delay = delay
+        else:
+            # check if the new value is different from piccolo value
+            if abs(self.delay - delay)>1e-6:
+                self.delay = delay
+                self._piccolo.piccolo.setDelay(delay=delay)
+                
     def pauseRecording(self):
         self._piccolo.piccolo.pause()
 
@@ -415,6 +550,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # hook up scheduler
         self._scheduledJobs.piccoloConnect(self._piccolo)
 
+        # set record parameters
+        self.changeAutoIntegrationRepeats(self._piccolo.piccolo.getAuto())
+        self.changeNCycles(self._piccolo.piccolo.getNCycles())
+        self.changeDelay(self._piccolo.piccolo.getDelay())
+        
         self.outputDir.setText(self._piccolo.piccolo.getCurrentRun())
 
         # initialise the extended status

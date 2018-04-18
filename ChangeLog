@@ -1,3 +1,18 @@
+2018-04-11 Magnus Hagdorn
+ * piccolo2/player/player.ui: rename text label
+
+2018-04-11 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: set record parameters when setting up a
+   schedule
+
+2018-04-11 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: set current run directly
+
+2018-04-10 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: allow auto integration, repeat measurements
+   and delay settings directly; disable parameter settings when server is 
+   busy
+
 2018-03-30 Magnus Hagdorn
  * piccolo2/player/player.ui: increase maximum number of repeats to 9999;
  fixes GUI-13
