@@ -1,3 +1,7 @@
+2018-05-01 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: make GUI more responsive when changing
+   paremeters
+
 2018-04-11 Magnus Hagdorn
  * piccolo2/player/player.ui: rename text label
 
