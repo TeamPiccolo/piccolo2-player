@@ -226,6 +226,11 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         # check every second
         self.timer.start(1000)
 
+        
+    def closeEvent(self,event):
+        if self._piccolo is not None:
+            self._piccolo.disconnect()
+        
     def syncTime(self):
         now = datetime.datetime.now()
         self._piccolo.piccolo.setClock(clock=now.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -472,25 +477,24 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         if connection == 'http':
             self._connectionType = 'http'
             self._connectionData = data
-            try:
-                self._piccolo = piccolo2.client.PiccoloJSONRPCClient(data)
-            except:
-                ok = False
-                errorTitle = 'failed to connect'
-                errorMsg = 'failed to connect to {}'.format(data)
+            self._piccolo = piccolo2.client.PiccoloJSONRPCClient(data)
         elif connection == 'xbee':
             self._connectionType = 'xbee'
             self._connectionData = data
-            try:
-                self._piccolo = piccolo2.client.PiccoloXbeeClient(data)
-            except:
-                ok = False
-                errorTitle = 'failed to connect'
-                errorMsg = 'failed to connect to {}'.format(data)  
+            self._piccolo = piccolo2.client.PiccoloXbeeClient(data)
         else:
             ok = False
             errorTitle ='not implemented'
             errorMsg = 'connection type {} is not implemented yet'.format(connection)
+
+        if ok:
+            try:
+                self._piccolo.connect()
+            except:
+                ok = False
+                errorTitle = 'failed to connect'
+                errorMsg = 'failed to connect to {}'.format(data)
+            
         if not ok:
             error=QtGui.QMessageBox.critical(self,errorTitle,errorMsg,QtGui.QMessageBox.Ok)
             return
