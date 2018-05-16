@@ -264,10 +264,19 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         if self.tabWidget.currentIndex()==0 and self._piccolo!=None:
             try:
                 ptime = self._piccolo.piccolo.getClock()
-            except:
-                ptime = None
-            if ptime is not None:
                 self.piccoloTime.setText(ptime.split('.')[0])
+            except:
+                pass
+            try:
+                pmem = self._piccolo.piccolo.memory()
+                self.percentMem.setValue(pmem)
+            except:
+                pass
+            try:
+                pcpu = self._piccolo.piccolo.cpu()
+                self.percentCPU.setValue(pcpu)
+            except:
+                pass
 
         # handle status
         state = 'red'

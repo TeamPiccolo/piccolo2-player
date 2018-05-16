@@ -1,3 +1,7 @@
+2018-05-16 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: update percentage memory and cpu display
+ * piccolo2/player/player.ui: add percentage memory and cpu display
+
 2018-05-09 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: use new connect method to connect to piccolo
    server; disconnect from server on exit
