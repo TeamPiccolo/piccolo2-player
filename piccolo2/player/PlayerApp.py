@@ -402,13 +402,14 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         self.currentRun = cr
         self.outputDir.setText(self.currentRun)
                 
-    def changeCurrentRun(self):
-        value = str(self.outputDir.text())
+    def changeCurrentRun(self,cr=None):
+        if cr is None:
+            cr = str(self.outputDir.text())
 
         # check if new value is different from piccolo value
-        if self.currentRun != value:
-            self.currentRun = value
-            self._piccolo.piccolo.setCurrentRun(cr=value)
+        if self.currentRun != cr:
+            self.currentRun = cr
+            self._piccolo.piccolo.setCurrentRun(cr=cr)
 
     def setNCycles(self,ncycles):
         self.nCycles = ncycles
@@ -443,7 +444,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         runList = self._piccolo.piccolo.getRunList()
         r = RunListDialog.getRun(runList=runList)
         if r is not None:
-            self.outputDir.setText(r)
+            self.changeCurrentRun(cr=r)
         
     def stopRecording(self):
         self._piccolo.piccolo.abort()

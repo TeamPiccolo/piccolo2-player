@@ -1,3 +1,6 @@
+2018-05-29 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: fix setting current run using list of runs
+
 2018-05-16 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: update percentage memory and cpu display
  * piccolo2/player/player.ui: add percentage memory and cpu display
