@@ -29,7 +29,7 @@ from Schedule import ScheduleDialog
 from QuietTime import QuietTimeDialog
 from RunList import RunListDialog
 from SpectraList import SpectraListDialog
-import datetime
+import datetime,pytz
 
 TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -232,8 +232,8 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
             self._piccolo.disconnect()
         
     def syncTime(self):
-        now = datetime.datetime.now()
-        self._piccolo.piccolo.setClock(clock=now.strftime("%Y-%m-%dT%H:%M:%S"))
+        now = datetime.datetime.now(tz=pytz.utc)
+        self._piccolo.piccolo.setClock(clock=now.isoformat())
 
     def disableEdit(self):
         self.integrationTimeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -259,7 +259,7 @@ class PlayerApp(QtGui.QMainWindow, player_ui.Ui_MainWindow):
         
     def status(self):
         # check if we need to update times
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(tz=pytz.utc)
         self.localTime.setText(now.strftime("%Y-%m-%dT%H:%M:%S"))
         if self.tabWidget.currentIndex()==0 and self._piccolo!=None:
             try:

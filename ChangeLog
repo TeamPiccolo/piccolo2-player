@@ -1,3 +1,9 @@
+2018-06-01 Magnus Hagdorn
+ * piccolo2/player/PlayerApp.py: add timezone info to timestamps
+ * piccolo2/player/Schedule.py: ditto
+ * piccolo2/player/ScheduleList.py: ditto
+ * piccolo2/player/SpectraList.py: tidy up
+
 2018-05-29 Magnus Hagdorn
  * piccolo2/player/PlayerApp.py: fix setting current run using list of runs
 

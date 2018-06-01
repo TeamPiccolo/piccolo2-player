@@ -19,14 +19,14 @@ __all__ = ['ScheduleDialog']
 
 from PyQt4 import QtGui, QtCore
 import schedule_ui
-import datetime
+import datetime,pytz
 
 class ScheduleDialog(QtGui.QDialog,schedule_ui.Ui_ScheduleDialog):
     def __init__(self,parent=None):
         super(ScheduleDialog, self).__init__(parent)
         self.setupUi(self)
 
-        now = QtCore.QDateTime(datetime.datetime.now())
+        now = QtCore.QDateTime(datetime.datetime.now(tz=pytz.utc))
 
         self.startTimeEdit.setMinimumDateTime(now)
         self.endTimeEdit.setMinimumDateTime(now)
@@ -44,7 +44,7 @@ class ScheduleDialog(QtGui.QDialog,schedule_ui.Ui_ScheduleDialog):
         
     @property
     def start(self):
-        return self.startTimeEdit.dateTime().toPyDateTime().isoformat()
+        return self.startTimeEdit.dateTime().toPyDateTime().isoformat()+'+00:00'
     
     @property
     def interval(self):
@@ -55,7 +55,7 @@ class ScheduleDialog(QtGui.QDialog,schedule_ui.Ui_ScheduleDialog):
     @property
     def end(self):
         if self.repeatSchedule.checkState()==2:
-            return self.endTimeEdit.dateTime().toPyDateTime().isoformat()
+            return self.endTimeEdit.dateTime().toPyDateTime().isoformat()+'+00:00'
 
     @staticmethod
     def getSchedule(parent=None):

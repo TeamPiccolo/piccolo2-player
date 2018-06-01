@@ -19,7 +19,8 @@ __all__ = ['PiccoloSchedule','ScheduleListDialog']
 
 from PyQt4 import QtGui, QtCore
 import schedulelist_ui
-import datetime
+import datetime,pytz
+from dateutil import parser
 
 class PiccoloSchedule(QtGui.QStandardItemModel):
     def __init__(self,*args,**keywords):
@@ -98,19 +99,19 @@ class ScheduleListDialog(QtGui.QDialog,schedulelist_ui.Ui_ScheduleListWindow):
         except:
             return
 
-        TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
-        now = datetime.datetime.now()
+        TIMEFORMAT = "%Y-%m-%dT%H:%M:%S%z"
+        now = datetime.datetime.now(tz=pytz.utc)
         for i in range(self._scheduledJobs.rowCount()):
             if self.tableView.isRowHidden(i):
                 continue
             hide = False
             if len(self._scheduledJobs.item(i,4).text())>0:
-                if now > datetime.datetime.strptime(str(self._scheduledJobs.item(i,4).text()),TIMEFORMAT):
+                if now > parser.parse(str(self._scheduledJobs.item(i,4).text())):
                     hide = True
             else:
                 if len(self._scheduledJobs.item(i,2).text())>0:
                     interval = float(self._scheduledJobs.item(i,3).text())
-                    if interval<1.e-6 and now > datetime.datetime.strptime(str(self._scheduledJobs.item(i,2).text()),TIMEFORMAT):
+                    if interval<1.e-6 and now > parser.parse(str(self._scheduledJobs.item(i,2).text())):
                         hide = True
             if hide:
                 self.tableView.hideRow(i)

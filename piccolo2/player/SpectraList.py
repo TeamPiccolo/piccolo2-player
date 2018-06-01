@@ -19,7 +19,6 @@ __all__ = ['ScheduleDialog']
 
 from PyQt4 import QtGui, QtCore
 import spectralist_ui
-import datetime
 
 class SpectraListDialog(QtGui.QDialog,spectralist_ui.Ui_SpectraListDialog):
     def __init__(self,parent=None,fileList=[]):
