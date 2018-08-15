@@ -18,7 +18,7 @@
 __all__ = ['main']
 
 import piccolo2.client
-from piccolo2.PiccoloStatus import PiccoloExtendedStatus
+from piccolo2.common import PiccoloExtendedStatus
 from piccolo2.player import __version__ as version
 
 from PyQt4 import QtGui, QtCore
